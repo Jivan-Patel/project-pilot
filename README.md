@@ -32,7 +32,7 @@ AI-powered project management and developer productivity platform built with Nex
 ```bash
 git clone https://github.com/Yogender-verma/ProjectPilot-AI.git
 
-cd ProjectPilot-AI
+cd project-pilot
 
 npm install
 
