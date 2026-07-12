@@ -1,4 +1,6 @@
 import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
+import { PrismaPg } from '@prisma/adapter-pg';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -12,6 +14,9 @@ const prismaOptions: any = {
 
 if (connectionString && connectionString.startsWith('prisma+postgres://')) {
   prismaOptions.accelerateUrl = connectionString;
+} else {
+  const pool = new Pool({ connectionString });
+  prismaOptions.adapter = new PrismaPg(pool);
 }
 
 export const prisma =
