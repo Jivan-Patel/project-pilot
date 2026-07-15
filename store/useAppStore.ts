@@ -11,8 +11,6 @@ import {
 } from '../types';
 
 import { generateAdaptiveDashboard } from '@/lib/adaptiveEngine';
-import { generateSmartReply } from '@/lib/mockAiEngine';
-
 // Neutral placeholder used before the authenticated user profile is hydrated from the DB.
 // This is intentionally empty — real data flows in via syncUserProfile() on mount.
 const DEFAULT_USER: User = {
@@ -113,97 +111,14 @@ const INITIAL_ROADMAPS: Record<string, Roadmap> = {
 const INITIAL_CONVERSATIONS: ChatConversation[] = [
   {
     id: 'conv-1',
-    title: 'How to build the Agentic decision tree?',
-    lastUpdated: new Date(Date.now() - 3600000), // 1 hour ago
+    title: 'New Conversation',
+    lastUpdated: new Date(),
     messages: [
       {
-        id: 'msg-1',
-        role: 'user',
-        content: 'Hi! I want to start building the "OmniAI Agentic Dashboard". I am a bit stuck on how to design the decision tree visualization in React. Should I use a heavy library like React Flow, or build a simple custom one with SVG/Tailwind?',
-        timestamp: new Date(Date.now() - 3700000)
-      },
-      {
-        id: 'msg-2',
+        id: 'msg-init-1',
         role: 'assistant',
-        content: 'Hello! That is a stellar choice for a project. To answer your question: **it depends on your goals, but since you want to WOW recruiters, building a custom lightweight SVG tree is actually much more impressive!**\n\nLibraries like React Flow are powerful but heavy. When a recruiter sees a *custom-crafted canvas or SVG renderer* with Framer Motion animations, it immediately signals elite-tier frontend and math capabilities.\n\nHere is a simple template structure for building a custom React SVG Connector component to link your Agent nodes:',
-        timestamp: new Date(Date.now() - 3650000),
-        codeSnippet: {
-          language: 'tsx',
-          code: `import React from 'react';
-import { motion } from 'framer-motion';
-
-interface ConnectionProps {
-  startX: number;
-  startY: number;
-  endX: number;
-  endY: number;
-  isActive: boolean;
-}
-
-export const AgentConnector: React.FC<ConnectionProps> = ({ startX, startY, endX, endY, isActive }) => {
-  // Generate a beautiful, flowing S-curve path
-  const midX = (startX + endX) / 2;
-  const path = \`M \${startX} \${startY} C \${midX} \${startY}, \${midX} \${endY}, \${endX} \${endY}\`;
-
-  return (
-    <svg className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
-      <path
-        d={path}
-        fill="none"
-        stroke="#1e293b" // slate-800
-        strokeWidth="2"
-      />
-      <motion.path
-        d={path}
-        fill="none"
-        stroke="url(#glowGradient)"
-        strokeWidth="3"
-        initial={{ pathLength: 0 }}
-        animate={isActive ? { pathLength: 1 } : { pathLength: 0 }}
-        transition={{ duration: 1.5, ease: "easeInOut", repeat: Infinity }}
-      />
-      <defs>
-        <linearGradient id="glowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#3b82f6" /> {/* Blue */}
-          <stop offset="50%" stopColor="#8b5cf6" /> {/* Purple */}
-          <stop offset="100%" stopColor="#ec4899" /> {/* Pink */}
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-};`
-        }
-      },
-      {
-        id: 'msg-3',
-        role: 'user',
-        content: 'Wow, that is beautiful! The S-curve calculation makes perfect sense. I will definitely use this. How can I represent the dynamic state of agents streaming from the backend?',
-        timestamp: new Date(Date.now() - 3610000)
-      },
-      {
-        id: 'msg-4',
-        role: 'assistant',
-        content: 'To handle streaming statuses, you should configure a SSE (Server-Sent Events) connection. In your Next.js frontend, write a hook that listens to `/api/agents/stream` and updates a local Zustand slice. I recommend structuring your messages like:\n`data: {"nodeId": "agent-a", "status": "running", "output": "Searching web..."}`\n\nLet me know if you want me to draft the Next.js server route or the frontend hook for this!',
-        timestamp: new Date(Date.now() - 3600000)
-      }
-    ]
-  },
-  {
-    id: 'conv-2',
-    title: 'Improving Resume Score with Docker',
-    lastUpdated: new Date(Date.now() - 86400000), // 1 day ago
-    messages: [
-      {
-        id: 'msg-1',
-        role: 'user',
-        content: 'My Resume score says 65% because I lack DevOps experience. How will building the log aggregation pipeline help me fix that?',
-        timestamp: new Date(Date.now() - 87000000)
-      },
-      {
-        id: 'msg-2',
-        role: 'assistant',
-        content: 'Excellent question. Recruiters scanning resumes for DevOps/Backend positions look for specific keywords and architectures: *Docker containers, log shippers, infrastructure dashboards, multi-service networks, and latency monitoring*.\n\nBy building the **Distributed Log Aggregation Pipeline**:\n1. You write a **Docker Compose** system uniting 4 services: Go/Node collector, Redis Queue, Elasticsearch Indexer, and Grafana Visualizer.\n2. You gain experience configuring Docker networks and volumes.\n3. You add **Prometheus metric monitoring** to measure standard throughput metrics.\n\nOn your resume, this lets you write a bullets like:\n*“Architected a containerized distributed log ingestion system handling 50k logs/sec using Kafka and Elasticsearch, achieving a 35% reduction in anomaly detection latency via custom local models.”*\n\nThis single bullet covers Docker, microservices, high-scale performance, and AI-ML, instantly boosting your career readiness score from 65% to over 85%!',
-        timestamp: new Date(Date.now() - 86400000)
+        content: 'Hello! I am your AI Career Mentor. Ask me anything about your recommended projects, how to fill skill gaps, structuring your github portfolio, or preparing for interviews with recruiters!',
+        timestamp: new Date()
       }
     ]
   }
@@ -634,38 +549,86 @@ export const useAppStore = create<AppStore>((set, get) => ({
       return conv;
     });
 
-    // Simulate AI Mentor reply streaming/delayed
-    setTimeout(() => {
-      const activeConv = get().conversations.find((c) => c.id === activeId);
-      if (!activeConv) return;
+    // Prepare an empty AI message to stream into
+    const aiMessageId = 'msg-ai-' + Math.random().toString(36).substr(2, 9);
+    const initialAiMessage: ChatMessage = {
+      id: aiMessageId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date()
+    };
 
-      const userContext = get().user || DEFAULT_USER;
-      const aiResponseData = generateSmartReply(content, userContext, activeConv.messages);
+    const updatedConversationsWithAi = updatedConversations.map((conv) => {
+      if (conv.id === activeId) {
+        return {
+          ...conv,
+          messages: [...conv.messages, initialAiMessage]
+        };
+      }
+      return conv;
+    });
 
-      const aiReplyMessage: ChatMessage = {
-        id: 'msg-ai-' + Math.random().toString(36).substr(2, 9),
-        role: 'assistant',
-        content: aiResponseData.content,
-        timestamp: new Date(),
-        codeSnippet: aiResponseData.codeSnippet
-      };
+    // Start streaming async
+    (async () => {
+      try {
+        const activeConv = get().conversations.find((c) => c.id === activeId);
+        if (!activeConv) return;
+        
+        const apiMessages = [...activeConv.messages, newMessage].map(m => ({ role: m.role, content: m.content }));
+        
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: apiMessages,
+            userContext: get().user || DEFAULT_USER
+          })
+        });
 
-      set((s) => ({
-        conversations: s.conversations.map((c) => {
-          if (c.id === activeId) {
-            return {
-              ...c,
-              messages: [...c.messages, aiReplyMessage],
-              lastUpdated: new Date()
-            };
-          }
-          return c;
-        })
-      }));
-    }, 1200);
+        if (!response.ok || !response.body) throw new Error('Failed to fetch AI response');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let aiContent = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          aiContent += chunk;
+          
+          set((s) => ({
+            conversations: s.conversations.map((c) => {
+              if (c.id === activeId) {
+                return {
+                  ...c,
+                  messages: c.messages.map(m => m.id === aiMessageId ? { ...m, content: aiContent } : m),
+                  lastUpdated: new Date()
+                };
+              }
+              return c;
+            })
+          }));
+        }
+      } catch (error) {
+        console.error('AI Streaming Error:', error);
+        set((s) => ({
+          conversations: s.conversations.map((c) => {
+            if (c.id === activeId) {
+              return {
+                ...c,
+                messages: c.messages.map(m => m.id === aiMessageId ? { ...m, content: 'Sorry, I encountered an error. Please check your API key and try again.' } : m)
+              };
+            }
+            return c;
+          })
+        }));
+      }
+    })();
 
     return {
-      conversations: updatedConversations
+      conversations: updatedConversationsWithAi
     };
   }),
   createNewConversation: (title) => {
