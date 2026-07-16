@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useClerk } from '@clerk/nextjs';
+import { useClerk, useUser } from '@clerk/nextjs';
 import {
   Compass,
   LayoutDashboard,
@@ -30,7 +30,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
   const pathname = usePathname();
   const router = useRouter();
   const { signOut } = useClerk();
-  const { user, logout } = useAppStore();
+  const { user: clerkUser } = useUser();
+  const { user: storeUser, logout } = useAppStore();
+
+  const displayUser = {
+    name: storeUser?.name || clerkUser?.fullName || 'User',
+    email: storeUser?.email || clerkUser?.primaryEmailAddress?.emailAddress || '',
+    avatarUrl: storeUser?.avatarUrl || clerkUser?.imageUrl || ''
+  };
 
   const handleSignOut = async () => {
     logout();
@@ -83,6 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
           )}
         </Link>
         <button
+          type="button"
           onClick={() => setCollapsed(!collapsed)}
           className="p-1.5 rounded-lg border transition-colors cursor-pointer"
           style={{
@@ -152,9 +160,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
           style={!collapsed ? { backgroundColor: 'var(--hover-bg)' } : {}}
         >
           <div className="w-10 h-10 rounded-full overflow-hidden border border-indigo-500/30 flex items-center justify-center bg-indigo-500/10 shrink-0">
-            {user?.avatarUrl ? (
+            {displayUser.avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={displayUser.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <UserIcon className="w-5 h-5 text-indigo-400" />
             )}
@@ -165,18 +173,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
                 className="text-sm font-semibold truncate"
                 style={{ color: 'var(--text-primary)' }}
               >
-                {user?.name}
+                {displayUser.name}
               </h4>
               <p
                 className="text-xs truncate"
                 style={{ color: 'var(--text-muted)' }}
               >
-                {user?.email}
+                {displayUser.email}
               </p>
             </div>
           )}
         </div>
         <button
+          type="button"
           onClick={handleSignOut}
           className="flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium hover:text-rose-300 hover:bg-rose-500/5 transition-all duration-200 w-full group cursor-pointer"
           style={{ color: 'var(--text-secondary)' }}

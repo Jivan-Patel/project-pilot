@@ -31,6 +31,7 @@ import {
   Tooltip
 } from 'recharts';
 import { useAppStore } from '@/store/useAppStore';
+import { useClerk, useUser } from '@clerk/nextjs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Progress } from '@/components/ui/Progress';
@@ -38,6 +39,7 @@ import { Button } from '@/components/ui/Button';
 
 export default function MainDashboardPage() {
   const { user, projects, careerScore, githubAnalytics, selectProject } = useAppStore();
+  const { user: clerkUser } = useUser();
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => {
@@ -76,7 +78,7 @@ export default function MainDashboardPage() {
             <span className="text-xs font-bold uppercase tracking-wider font-mono">Welcome back to Pilot Terminal</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
-            Hello, {user?.name || 'Pilot'}
+            Hello, {user?.name || clerkUser?.firstName || 'Pilot'}
           </h2>
           <p className="text-xs sm:text-sm max-w-xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
             Your career target is set to <span className="text-indigo-400 font-bold">{user?.careerGoal}</span>. Complete recommendations to close your remaining skill gaps.

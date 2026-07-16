@@ -40,7 +40,7 @@ Respond directly to the user's latest query based on the conversation history.`;
     }
 
     const result = await streamText({
-      model: google('gemini-flash-latest'),
+      model: google('gemini-flash-lite-latest'),
       system: systemPrompt,
       messages: validMessages,
     });
