@@ -12,7 +12,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, children, variant = 'default', size = 'md', isLoading, leftIcon, rightIcon, disabled, style: externalStyle, ...props }, ref) => {
+  ({ className, children, variant = 'default', size = 'md', isLoading, leftIcon, rightIcon, disabled, style: externalStyle, type = 'button', ...props }, ref) => {
 
     const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none active:scale-98 select-none relative z-10 cursor-pointer';
 
@@ -70,6 +70,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <motion.button
+        type={type}
         ref={ref}
         disabled={disabled || isLoading}
         whileHover={{ y: disabled ? 0 : -2 }}
