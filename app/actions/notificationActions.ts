@@ -245,27 +245,42 @@ export async function getNotifications() {
 }
 
 export async function markNotificationRead(notificationId: string) {
-  const user = await getAuthenticatedDbUser();
-  const result = await prisma.notification.updateMany({
-    where: { id: notificationId, userId: user.id },
-    data: { isRead: true },
-  });
-  return { success: result.count === 1 };
+  try {
+    const user = await getAuthenticatedDbUser();
+    const result = await prisma.notification.updateMany({
+      where: { id: notificationId, userId: user.id },
+      data: { isRead: true },
+    });
+    return { success: result.count === 1 };
+  } catch (error) {
+    console.error('Failed to mark notification read:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 export async function markAllNotificationsRead() {
-  const user = await getAuthenticatedDbUser();
-  await prisma.notification.updateMany({
-    where: { userId: user.id, isRead: false },
-    data: { isRead: true },
-  });
-  return { success: true as const };
+  try {
+    const user = await getAuthenticatedDbUser();
+    await prisma.notification.updateMany({
+      where: { userId: user.id, isRead: false },
+      data: { isRead: true },
+    });
+    return { success: true as const };
+  } catch (error) {
+    console.error('Failed to mark all notifications read:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 export async function deleteNotification(notificationId: string) {
-  const user = await getAuthenticatedDbUser();
-  const result = await prisma.notification.deleteMany({
-    where: { id: notificationId, userId: user.id },
-  });
-  return { success: result.count === 1 };
+  try {
+    const user = await getAuthenticatedDbUser();
+    const result = await prisma.notification.deleteMany({
+      where: { id: notificationId, userId: user.id },
+    });
+    return { success: result.count === 1 };
+  } catch (error) {
+    console.error('Failed to delete notification:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }

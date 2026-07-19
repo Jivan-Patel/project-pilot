@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
 import { ThemeProvider } from '@/lib/ThemeProvider';
+import Script from 'next/script';
 import "./globals.css";
 
 const geistSans = Geist({
@@ -39,8 +40,8 @@ export default function RootLayout({
            * on <html> synchronously so users never see a flash of the wrong
            * theme when they revisit the page with a saved light-mode preference.
            */}
-          <script suppressHydrationWarning dangerouslySetInnerHTML={{
-            __html: `
+          <Script id="theme-script" strategy="beforeInteractive">
+            {`
               (function() {
                 try {
                   var stored = localStorage.getItem('projectpilot-theme');
@@ -51,8 +52,8 @@ export default function RootLayout({
                   document.documentElement.setAttribute('data-theme', 'dark');
                 }
               })();
-            `
-          }} />
+            `}
+          </Script>
         </head>
         <body className="min-h-full flex flex-col">
           {/* ThemeProvider wraps the entire app so every client component
@@ -61,8 +62,8 @@ export default function RootLayout({
             {children}
           </ThemeProvider>
           {/* Hide Clerk dev-mode badge in development */}
-          <script suppressHydrationWarning dangerouslySetInnerHTML={{
-            __html: `
+          <Script id="clerk-badge-hider" strategy="afterInteractive">
+            {`
               setInterval(() => {
                 const elements = document.querySelectorAll('div[class*="cl-"]');
                 for (let i = 0; i < elements.length; i++) {
@@ -71,8 +72,8 @@ export default function RootLayout({
                   }
                 }
               }, 100);
-            `
-          }} />
+            `}
+          </Script>
         </body>
       </html>
     </ClerkProvider>

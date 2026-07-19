@@ -174,20 +174,7 @@ export default function DashboardLayout({
             </button>
 
             {/* Mobile Notifications button */}
-            <button
-              type="button"
-              onClick={() => setShowNotifications(!showNotifications)}
-              aria-label="Toggle notifications"
-              className="p-3 rounded-2xl border transition-all cursor-pointer relative hover:scale-105 active:scale-95 shadow-sm"
-              style={{
-                borderColor: 'var(--border-subtle)',
-                color: 'var(--text-secondary)',
-                backgroundColor: 'var(--hover-bg)',
-              }}
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full ring-2 ring-indigo-400/30" />
-            </button>
+            <NotificationCenter mobile={true} />
 
             {/* Mobile Menu (Hamburger) button */}
             <button
@@ -271,77 +258,7 @@ export default function DashboardLayout({
             </button>
 
             {/* Notifications panel trigger */}
-            <div className="relative">
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="p-3 rounded-2xl border transition-all cursor-pointer relative hover:scale-105 active:scale-95 shadow-sm"
-                style={{
-                  borderColor: 'var(--border-subtle)',
-                  color: 'var(--text-secondary)',
-                  backgroundColor: 'var(--hover-bg)',
-                }}
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-indigo-500 rounded-full ring-2 ring-indigo-400/30" />
-              </button>
-
-              <AnimatePresence>
-                {showNotifications && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 mt-3 w-80 rounded-2xl p-4 shadow-2xl z-50 glass-panel"
-                    style={{
-                      backgroundColor: 'var(--panel-bg)',
-                      borderColor: 'var(--panel-border)',
-                    }}
-                  >
-                    <div
-                      className="flex items-center justify-between pb-3 mb-3"
-                      style={{ borderBottom: '1px solid var(--border-subtle)' }}
-                    >
-                      <h4
-                        className="text-xs font-bold uppercase tracking-wider"
-                        style={{ color: 'var(--text-primary)' }}
-                      >
-                        Notifications
-                      </h4>
-                      <button
-                        className="text-[10px] text-indigo-400 font-semibold hover:underline cursor-pointer"
-                      >
-                        Clear All
-                      </button>
-                    </div>
-                    <div className="space-y-3">
-                      {notifications.map((n) => (
-                        <div
-                          key={n.id}
-                          className="p-2.5 rounded-xl border border-transparent hover:border-indigo-500/10 transition-all text-xs"
-                          style={{ backgroundColor: 'var(--hover-bg)' }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span
-                              className={`font-semibold ${n.unread ? 'text-indigo-400' : ''}`}
-                              style={!n.unread ? { color: 'var(--text-secondary)' } : {}}
-                            >
-                              {n.title}
-                            </span>
-                            {n.unread && <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />}
-                          </div>
-                          <span
-                            className="text-[10px] mt-1 block"
-                            style={{ color: 'var(--text-muted)' }}
-                          >
-                            {n.time}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <NotificationCenter />
           </div>
         </header>
 
