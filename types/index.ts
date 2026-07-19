@@ -145,3 +145,23 @@ export interface CareerScore {
   improvements: string[];
   resumeScore: number;
 }
+
+
+export type NotificationType =
+  | 'deadline_approaching'
+  | 'deadline_missed'
+  | 'project_stalled'
+  | 'milestone_completed'
+  | 'project_completed'
+  | 'career_milestone_due';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  isRead: boolean;
+  link?: string | null;
+  projectId?: string | null;
+  createdAt: string;
+}
