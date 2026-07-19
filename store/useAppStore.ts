@@ -21,6 +21,9 @@ const DEFAULT_USER: User = {
   email: 'yogendarverma0268@gmail.com',
   avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
   careerGoal: 'AI Engineer',
+  githubUrl: '',
+  linkedinUrl: '',
+  resumeUrl: '',
   skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS']
 };
 
@@ -270,6 +273,11 @@ interface AppStore {
   logout: () => void;
   updateProfile: (name: string, email: string, careerGoal: string) => void;
   updateAvatar: (avatarUrl: string) => void;
+  updateProfessionalLinks: (
+    githubUrl: string,
+    linkedinUrl: string,
+    resumeUrl: string
+  ) => void;
   updateUserSkills: (skills: string[]) => void;
   syncUserProfile: (dbUser: any) => void;
 
@@ -351,6 +359,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       email: email || '',
       avatarUrl: '',
       careerGoal: 'fullstack',
+      githubUrl: '',
+      linkedinUrl: '',
+      resumeUrl: '',
       skills: []
     };
     const adaptive = generateAdaptiveDashboard(newUser);
@@ -369,6 +380,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       email: email || '',
       avatarUrl: '',
       careerGoal: careerGoal || 'fullstack',
+      githubUrl: '',
+      linkedinUrl: '',
+      resumeUrl: '',
       skills: []
     };
     const adaptive = generateAdaptiveDashboard(newUser);
@@ -403,6 +417,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
       githubAnalytics: { ...state.githubAnalytics, recruiterInsights: adaptive.insights }
     };
   }),
+  updateProfessionalLinks: (
+    githubUrl,
+    linkedinUrl,
+    resumeUrl
+) =>
+    set((state) => {
+        if (!state.user) return {};
+
+        return {
+            user: {
+                ...state.user,
+                githubUrl,
+                linkedinUrl,
+                resumeUrl,
+            },
+        };
+    }),
   updateUserSkills: (skills) => set((state) => {
     if (!state.user) return {};
     const updatedUser = { ...state.user, skills };
@@ -423,6 +454,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
         email: dbUser.email || '',
         avatarUrl: dbUser.imageUrl || '',
         careerGoal: dbUser.dreamRole || 'fullstack',
+        githubUrl: dbUser.githubUrl || '',
+        linkedinUrl: dbUser.linkedinUrl || '',
+        resumeUrl: dbUser.resumeUrl || '',
         skills: dbUser.skills || []
       };
       const adaptive = generateAdaptiveDashboard(updatedUser);
