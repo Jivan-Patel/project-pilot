@@ -11,16 +11,17 @@ import {
 } from '../types';
 
 import { generateAdaptiveDashboard } from '@/lib/adaptiveEngine';
+import { toggleProjectMilestoneInDb, createActivityInDb, saveProjectToDb } from '@/app/actions/projectActions';
 
 // Neutral placeholder used before the authenticated user profile is hydrated from the DB.
 // This is intentionally empty — real data flows in via syncUserProfile() on mount.
 const DEFAULT_USER: User = {
-  id: '',
-  name: '',
-  email: '',
-  avatarUrl: '',
-  careerGoal: 'fullstack',
-  skills: []
+  id: 'user-yogender',
+  name: 'Yogender Verma',
+  email: 'yogendarverma0268@gmail.com',
+  avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
+  careerGoal: 'AI Engineer',
+  skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS']
 };
 
 const initialAdaptive = generateAdaptiveDashboard(DEFAULT_USER);
@@ -268,6 +269,7 @@ interface AppStore {
   signup: (email: string, name: string, careerGoal: string) => void;
   logout: () => void;
   updateUserSkills: (skills: string[]) => void;
+  updateUserProfile: (name: string, email: string, careerGoal: string) => void;
   syncUserProfile: (dbUser: any) => void;
 
   // Projects State
@@ -381,6 +383,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
   updateUserSkills: (skills) => set((state) => {
     if (!state.user) return {};
     const updatedUser = { ...state.user, skills };
+    const adaptive = generateAdaptiveDashboard(updatedUser);
+    return {
+      user: updatedUser,
+      careerScore: adaptive.careerScore,
+      projects: adaptive.projects,
+      githubAnalytics: { ...state.githubAnalytics, recruiterInsights: adaptive.insights }
+    };
+  }),
+  updateUserProfile: (name, email, careerGoal) => set((state) => {
+    if (!state.user) return {};
+    const updatedUser = { ...state.user, name, email, careerGoal };
     const adaptive = generateAdaptiveDashboard(updatedUser);
     return {
       user: updatedUser,

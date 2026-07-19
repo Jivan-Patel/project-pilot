@@ -7,7 +7,8 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 export const proxy = clerkMiddleware(async (auth, req) => {
-  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isProtectedRoute(req)) {
+  // In development, we allow the hardcoded mock login to bypass Clerk protection
+  if (process.env.NODE_ENV !== 'development' && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && isProtectedRoute(req)) {
     await auth.protect();
   }
 });
