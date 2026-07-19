@@ -437,6 +437,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
             ...ap,
             status: dbProj.status,
             progress: dbProj.progress,
+            createdAt: dbProj.createdAt,
+            updatedAt: dbProj.updatedAt,
           };
         }
         return ap;
