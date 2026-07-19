@@ -38,12 +38,13 @@ export interface Project {
   completionTime: string;
   githubPortfolioValue: string;
   category: string;
-  status?: 'Planned' | 'In Progress' | 'Completed' | 'Archived';
+  status?: string;
   progress?: number;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  githubUrl?: string;
+  liveUrl?: string;
 }
-
 
 export type ProjectActivityType =
   | 'project_created'

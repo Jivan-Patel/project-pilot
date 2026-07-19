@@ -62,6 +62,59 @@ export async function getUserProjects() {
   }
 }
 
+
+/**
+ * Returns a project only when it belongs to the currently authenticated user.
+ * The client uses this ownership-checked payload before generating an export.
+ */
+export async function getOwnedProjectForExport(projectId: string) {
+  try {
+    if (!projectId?.trim()) {
+      return { success: false as const, error: 'A valid project ID is required.' };
+    }
+
+    const clerkId = await getAuthenticatedUserId();
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        user: { clerkId },
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        progress: true,
+        tags: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!project) {
+      return {
+        success: false as const,
+        error: 'Project not found in your account. Initialize or save it before exporting.',
+      };
+    }
+
+    return {
+      success: true as const,
+      project: {
+        ...project,
+        createdAt: project.createdAt.toISOString(),
+        updatedAt: project.updatedAt.toISOString(),
+      },
+    };
+  } catch (error) {
+    console.error('Failed to authorize project export:', error);
+    return {
+      success: false as const,
+      error: 'Unable to verify project ownership. Please try again.',
+    };
+  }
+}
+
 /**
  * Saves (upserts) a project and its associated roadmap to the database.
  */
