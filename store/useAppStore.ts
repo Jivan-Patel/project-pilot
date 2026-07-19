@@ -269,6 +269,7 @@ interface AppStore {
   signup: (email: string, name: string, careerGoal: string) => void;
   logout: () => void;
   updateProfile: (name: string, email: string, careerGoal: string) => void;
+  updateAvatar: (avatarUrl: string) => void;
   updateUserSkills: (skills: string[]) => void;
   syncUserProfile: (dbUser: any) => void;
 
@@ -383,6 +384,17 @@ export const useAppStore = create<AppStore>((set, get) => ({
   updateProfile: (name, email, careerGoal) => set((state) => {
     if (!state.user) return {};
     const updatedUser = { ...state.user, name, email, careerGoal };
+    const adaptive = generateAdaptiveDashboard(updatedUser);
+    return {
+      user: updatedUser,
+      careerScore: adaptive.careerScore,
+      projects: adaptive.projects,
+      githubAnalytics: { ...state.githubAnalytics, recruiterInsights: adaptive.insights }
+    };
+  }),
+  updateAvatar: (avatarUrl) => set((state) => {
+    if (!state.user) return {};
+    const updatedUser = { ...state.user, avatarUrl };
     const adaptive = generateAdaptiveDashboard(updatedUser);
     return {
       user: updatedUser,

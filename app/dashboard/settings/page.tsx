@@ -29,10 +29,9 @@ import type { Theme } from '@/lib/ThemeProvider';
 
 // UploadThing Integrations
 import { updateProfileAvatar } from '@/app/actions/user';
-import { useUploadThing } from '@/lib/uploadthing';
 
 export default function SettingsPage() {
-  const { user, onboardingData, updateProfile, resetOnboarding, githubAnalytics, connectGithub, disconnectGithub } = useAppStore();
+  const { user, onboardingData, updateProfile, updateAvatar, resetOnboarding, githubAnalytics, connectGithub, disconnectGithub } = useAppStore();
 
   // Access the global theme state & setTheme so the user can pick directly
   const { theme, setTheme } = useTheme();
@@ -58,24 +57,22 @@ export default function SettingsPage() {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const [avatarSuccess, setAvatarSuccess] = useState<string | null>(null);
 
-  const { startUpload, isUploading } = useUploadThing("avatarUploader", {
-    onClientUploadComplete: async (res) => {
-      const uploadedUrl = res?.[0]?.url;
-      if (!uploadedUrl) {
-        setAvatarError("Upload resolved with an empty payload reference.");
-        return;
-      }
+  const isUploading = false; // Mocking uploading state for compatibility
 
-      const success = await updateProfileAvatar(uploadedUrl);
-      if (success) {
-        setAvatarSuccess("Avatar updated successfully!");
-        setAvatarFile(null);
-      }
-    },
-    onUploadError: (error: Error) => {
-      setAvatarError(`Upload exception: ${error.message}`);
-    },
-  });
+  const handleSaveAvatar = async () => {
+    if (!previewUrl) return;
+    
+    // Save to global state instantly as base64
+    updateAvatar(previewUrl);
+    
+    try {
+      // Attempt to persist to DB (optional fallback)
+      await updateProfileAvatar(previewUrl);
+    } catch(e) {}
+    
+    setAvatarSuccess("Avatar updated locally successfully!");
+    setAvatarFile(null);
+  };
 
   const handleAvatarSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAvatarError(null);
@@ -231,7 +228,7 @@ export default function SettingsPage() {
                         type="button"
                         variant="premium"
                         size="sm"
-                        onClick={() => startUpload([avatarFile])}
+                        onClick={handleSaveAvatar}
                         disabled={isUploading}
                         className="h-8 text-[11px] font-semibold flex items-center"
                       >

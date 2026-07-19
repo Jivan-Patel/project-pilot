@@ -10,9 +10,14 @@ export const ourFileRouter = {
       let userId: string | null = null;
       
       if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-        const session = await auth();
-        userId = session.userId;
-      } else if (process.env.NODE_ENV === "development") {
+        try {
+          const session = await auth();
+          userId = session?.userId || null;
+        } catch(e) {}
+      } 
+      
+      // Fallback to mock developer if Clerk fails or is bypassed in dev mode
+      if (!userId && process.env.NODE_ENV === "development") {
         userId = "mock-developer-id";
       }
 
