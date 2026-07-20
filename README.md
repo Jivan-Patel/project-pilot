@@ -125,7 +125,7 @@ Thanks to everyone who has contributed to ProjectPilot AI. Your contributions he
    />
 </a>
 
-Made with [contrib.rocks](https://contrib.rocks).
+
 
 
 ## Author
