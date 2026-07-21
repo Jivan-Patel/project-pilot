@@ -19,10 +19,12 @@ import { toggleProjectMilestoneInDb, createActivityInDb, saveProjectToDb } from 
 const DEFAULT_USER: User = {
   id: 'user-yogender',
   name: 'Yogender Verma',
+  username: 'yogender-verma',
   email: 'yogendarverma0268@gmail.com',
   avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80',
   careerGoal: 'AI Engineer',
-  skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS']
+  skills: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS'],
+  portfolioPublic: false,
 };
 
 const initialAdaptive = generateAdaptiveDashboard(DEFAULT_USER);
@@ -272,6 +274,7 @@ interface AppStore {
   updateProfile: (name: string, email: string, careerGoal: string) => void;
   updateAvatar: (avatarUrl: string) => void;
   updateUserSkills: (skills: string[]) => void;
+  updatePortfolioVisibility: (portfolioPublic: boolean, username?: string) => void;
   syncUserProfile: (dbUser: any) => void;
 
   // Projects State
@@ -419,16 +422,27 @@ export const useAppStore = create<AppStore>((set, get) => ({
       githubAnalytics: { ...state.githubAnalytics, recruiterInsights: adaptive.insights }
     };
   }),
+  updatePortfolioVisibility: (portfolioPublic, username) => set((state) => {
+    if (!state.user) return {};
+    const updatedUser = {
+      ...state.user,
+      portfolioPublic,
+      ...(username ? { username } : {}),
+    };
+    return { user: updatedUser };
+  }),
   syncUserProfile: (dbUser) => {
     if (!dbUser) return;
     set((state) => {
       const updatedUser = {
         id: dbUser.clerkId || dbUser.id || '',
         name: dbUser.fullName || dbUser.email?.split('@')[0] || 'Anonymous User',
+        username: dbUser.username || dbUser.fullName?.toLowerCase().replace(/\s+/g, '-') || 'yogender-verma',
         email: dbUser.email || '',
         avatarUrl: dbUser.imageUrl || '',
         careerGoal: dbUser.dreamRole || 'fullstack',
-        skills: dbUser.skills || []
+        skills: dbUser.skills || [],
+        portfolioPublic: dbUser.portfolioPublic ?? false,
       };
       const adaptive = generateAdaptiveDashboard(updatedUser);
       

@@ -2,9 +2,11 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  username?: string;
   avatarUrl?: string;
   careerGoal?: string;
   skills: string[];
+  portfolioPublic?: boolean;
 }
 
 export interface OnboardingData {

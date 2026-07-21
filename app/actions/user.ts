@@ -154,3 +154,85 @@ export async function updateProfileAvatar(imageUrl: string) {
     throw error;
   }
 }
+
+/**
+ * Updates public portfolio visibility & custom username settings.
+ */
+export async function updatePortfolioSettings(portfolioPublic: boolean, customUsername?: string) {
+  let userId: string | null = null;
+
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    const session = await auth();
+    userId = session.userId;
+  } else if (process.env.NODE_ENV === "development") {
+    userId = "mock-developer-id";
+  }
+
+  if (!userId) {
+    throw new Error("Unauthenticated user attempt.");
+  }
+
+  const username = customUsername
+    ? customUsername.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-")
+    : undefined;
+
+  try {
+    return await prisma.user.update({
+      where: { clerkId: userId },
+      data: {
+        portfolioPublic,
+        ...(username ? { username } : {}),
+      },
+    });
+  } catch (error) {
+    console.error("Failed to update portfolio settings:", error);
+    if (process.env.NODE_ENV === "development") {
+      return {
+        clerkId: userId,
+        portfolioPublic,
+        ...(username ? { username } : {}),
+      };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Fetches public portfolio data by username/handle or ID.
+ * Returns null if user is not found or if portfolioPublic is false.
+ */
+export async function getPublicPortfolioData(usernameParam: string) {
+  const cleanUsername = usernameParam.trim().toLowerCase();
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: cleanUsername },
+          { clerkId: usernameParam },
+          { id: usernameParam },
+          { email: { startsWith: cleanUsername } },
+        ],
+      },
+      include: {
+        projects: {
+          include: {
+            activities: {
+              orderBy: { createdAt: "desc" },
+            },
+          },
+        },
+      },
+    });
+
+    if (!user || !user.portfolioPublic) {
+      return null;
+    }
+
+    const { email, clerkId, ...publicProfile } = user;
+    return publicProfile;
+  } catch (error) {
+    console.error("Failed to fetch public portfolio data:", error);
+    return null;
+  }
+}
