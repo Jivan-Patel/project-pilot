@@ -276,6 +276,11 @@ interface AppStore {
   logout: () => void;
   updateProfile: (name: string, email: string, careerGoal: string) => void;
   updateAvatar: (avatarUrl: string) => void;
+  updateProfessionalLinks: (
+    githubUrl: string,
+    linkedinUrl: string,
+    resumeUrl: string
+  ) => void;
   updateUserSkills: (skills: string[]) => void;
   updatePortfolioVisibility: (portfolioPublic: boolean, username?: string) => void;
   syncUserProfile: (dbUser: any) => void;
@@ -362,6 +367,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       email: email || '',
       avatarUrl: '',
       careerGoal: 'fullstack',
+      githubUrl: '',
+      linkedinUrl: '',
+      resumeUrl: '',
       skills: []
     };
     const adaptive = generateAdaptiveDashboard(newUser);
@@ -380,6 +388,9 @@ export const useAppStore = create<AppStore>((set, get) => ({
       email: email || '',
       avatarUrl: '',
       careerGoal: careerGoal || 'fullstack',
+      githubUrl: '',
+      linkedinUrl: '',
+      resumeUrl: '',
       skills: []
     };
     const adaptive = generateAdaptiveDashboard(newUser);
@@ -414,6 +425,23 @@ export const useAppStore = create<AppStore>((set, get) => ({
       githubAnalytics: { ...state.githubAnalytics, recruiterInsights: adaptive.insights }
     };
   }),
+  updateProfessionalLinks: (
+    githubUrl,
+    linkedinUrl,
+    resumeUrl
+) =>
+    set((state) => {
+        if (!state.user) return {};
+
+        return {
+            user: {
+                ...state.user,
+                githubUrl,
+                linkedinUrl,
+                resumeUrl,
+            },
+        };
+    }),
   updateUserSkills: (skills) => set((state) => {
     if (!state.user) return {};
     const updatedUser = { ...state.user, skills };
