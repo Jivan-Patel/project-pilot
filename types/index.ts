@@ -5,6 +5,11 @@ export interface User {
   username?: string;
   avatarUrl?: string;
   careerGoal?: string;
+
+  githubUrl?: string;
+  linkedinUrl?: string;
+  resumeUrl?: string;
+
   skills: string[];
   portfolioPublic?: boolean;
 }
@@ -40,12 +45,13 @@ export interface Project {
   completionTime: string;
   githubPortfolioValue: string;
   category: string;
-  status?: 'Planned' | 'In Progress' | 'Completed' | 'Archived';
+  status?: string;
   progress?: number;
-  createdAt?: string | Date;
-  updatedAt?: string | Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  githubUrl?: string;
+  liveUrl?: string;
 }
-
 
 export type ProjectActivityType =
   | 'project_created'
@@ -145,4 +151,24 @@ export interface CareerScore {
   missingSkills: { name: string; importance: 'High' | 'Medium' | 'Low'; category: string }[];
   improvements: string[];
   resumeScore: number;
+}
+
+
+export type NotificationType =
+  | 'deadline_approaching'
+  | 'deadline_missed'
+  | 'project_stalled'
+  | 'milestone_completed'
+  | 'project_completed'
+  | 'career_milestone_due';
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  isRead: boolean;
+  link?: string | null;
+  projectId?: string | null;
+  createdAt: string;
 }
