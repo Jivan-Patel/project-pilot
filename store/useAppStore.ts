@@ -291,6 +291,7 @@ interface AppStore {
   selectedProjectId: string | null;
   setProjects: (projects: Project[]) => void;
   selectProject: (id: string | null) => void;
+  addCustomProject: (project: Project) => void;
 
   // Project Activity State
   activities: ProjectActivity[];
@@ -544,6 +545,31 @@ export const useAppStore = create<AppStore>((set, get) => ({
   selectedProjectId: 'project-1',
   setProjects: (projects) => set({ projects }),
   selectProject: (id) => set({ selectedProjectId: id }),
+  addCustomProject: (newProject) => set((state) => {
+    const updatedProjects = [newProject, ...state.projects];
+    saveProjectToDb({
+      id: newProject.id,
+      title: newProject.title,
+      description: newProject.description || undefined,
+      status: newProject.status || 'Planned',
+      progress: newProject.progress || 0,
+      tags: newProject.technologies || [],
+    });
+    createActivityInDb(newProject.id, `Created project: ${newProject.title}`, 'project_created');
+    const newActivity: ProjectActivity = {
+      id: `activity-${Date.now()}`,
+      type: 'project_created',
+      description: `Created project: ${newProject.title}`,
+      projectId: newProject.id,
+      projectTitle: newProject.title,
+      createdAt: new Date().toISOString(),
+    };
+    return {
+      projects: updatedProjects,
+      selectedProjectId: newProject.id,
+      activities: [newActivity, ...state.activities]
+    };
+  }),
 
   // Project Activity State
   activities: [],
