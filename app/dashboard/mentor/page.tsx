@@ -301,20 +301,24 @@ export default function AiMentorChatPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3.5">
             <button
+              type="button"
               onClick={toggleRoastMode}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+              title={isRoastMode ? "Disable Roast Mode" : "Enable AI Code Roast Mode"}
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold tracking-wider transition-all transform active:scale-95 border cursor-pointer ${
                 isRoastMode
-                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 shadow-sm shadow-rose-500/20'
-                  : 'bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-white/20'
+                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.3)] animate-pulse font-extrabold'
+                  : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-slate-300'
               }`}
-              title={isRoastMode ? 'Roast Mode Active: Critical & Humorous Feedback' : 'Enable Roast Mode for humorous critique'}
             >
               <Flame className={`w-3.5 h-3.5 ${isRoastMode ? 'text-rose-400 animate-bounce' : ''}`} />
-              <span>{isRoastMode ? 'Roast Mode ON' : 'Roast Mode'}</span>
+              <span>{isRoastMode ? 'ROAST MODE ON' : 'ROAST MODE'}</span>
             </button>
-            <Badge variant="glow" className="text-[10px] font-mono">ONLINE</Badge>
+
+            <Badge variant="glow" className="text-[10px] font-mono">
+              ONLINE
+            </Badge>
           </div>
         </div>
 
