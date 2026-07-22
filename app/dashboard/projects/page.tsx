@@ -3,7 +3,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, Check, Clock, FolderGit2, TrendingUp } from 'lucide-react';
+import { ArrowUpRight, Check, Clock, FolderGit2, TrendingUp, Plus } from 'lucide-react';
+import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import { useAppStore } from '@/store/useAppStore';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -133,8 +134,15 @@ export default function RecommendedProjectsPage() {
     setSortBy(DEFAULT_SORT);
   };
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
   return (
     <div className="space-y-8 pb-12">
+      <CreateProjectModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="flex items-center space-x-2 text-2xl font-bold text-white">
@@ -145,9 +153,22 @@ export default function RecommendedProjectsPage() {
             Custom engineered portfolios created to shut down your structural skill gaps.
           </p>
         </div>
-        <Badge variant="glow" className="w-fit self-start px-3 py-1 font-mono font-bold sm:self-center">
-          🛩 ACTIVE TARGET: {projects.length} OPTIONS LOADED
-        </Badge>
+
+        <div className="flex flex-wrap items-center gap-3 self-start sm:self-center">
+          <Button
+            variant="premium"
+            size="sm"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="h-10 px-4 text-xs font-bold shadow-md shadow-indigo-500/20"
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Create Project
+          </Button>
+
+          <Badge variant="glow" className="w-fit px-3 py-1 font-mono font-bold">
+            🛩 ACTIVE TARGET: {projects.length} OPTIONS LOADED
+          </Badge>
+        </div>
       </div>
 
       <ProjectControls

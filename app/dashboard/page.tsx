@@ -17,8 +17,10 @@ import {
   Cpu,
   FileText,
   GitMerge,
-  Sparkles
+  Sparkles,
+  Plus
 } from 'lucide-react';
+import { CreateProjectModal } from '@/components/projects/CreateProjectModal';
 import Link from 'next/link';
 import React from 'react';
 import {
@@ -61,8 +63,15 @@ export default function MainDashboardPage() {
   const highPriorityGaps = careerScore.missingSkills.filter(s => s.importance === 'High');
   const activeRecommendedProject = projects[0]; // OmniAI Agentic Dashboard
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
+
   return (
     <div className="space-y-8 pb-12">
+      <CreateProjectModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+
       {/* Welcome Banner */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
@@ -83,11 +92,22 @@ export default function MainDashboardPage() {
           </p>
         </div>
 
-        <Link href="/dashboard/projects" className="shrink-0 w-full md:w-auto">
-          <Button variant="premium" className="w-full h-12" rightIcon={<ArrowUpRight className="w-4.5 h-4.5" />}>
-            View Recommendations
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
+          <Button
+            variant="premium"
+            className="w-full sm:w-auto h-12 px-5 font-bold"
+            onClick={() => setIsCreateModalOpen(true)}
+            leftIcon={<Plus className="w-4 h-4" />}
+          >
+            New Project
           </Button>
-        </Link>
+
+          <Link href="/dashboard/projects" className="w-full sm:w-auto">
+            <Button variant="glow" className="w-full h-12 px-5" rightIcon={<ArrowUpRight className="w-4.5 h-4.5" />}>
+              View Blueprints
+            </Button>
+          </Link>
+        </div>
       </motion.div>
 
       {/* Main Core Widgets Grid */}
