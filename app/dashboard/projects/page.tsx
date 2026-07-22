@@ -79,6 +79,7 @@ export default function RecommendedProjectsPage() {
   // Pagination states
   const [displayCount, setDisplayCount] = useState(6);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [view, setView] = useState<ProjectView>(DEFAULT_VIEW);
 
   // Trigger project selection & auto-generate roadmap if not already present
   const handleBuildProject = (projectId: string, title: string) => {
