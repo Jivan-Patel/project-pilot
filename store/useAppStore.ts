@@ -320,6 +320,11 @@ interface AppStore {
   careerScore: CareerScore;
   recalculateCareerScore: () => void;
 
+  // Roast Mode State
+  isRoastMode: boolean;
+  toggleRoastMode: () => void;
+  setRoastMode: (isRoastMode: boolean) => void;
+
   // Reading Mode State
   isReadingMode: boolean;
   activeReadingMessageId: string | null;
@@ -799,7 +804,8 @@ export const useAppStore = create<AppStore>((set, get) => ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: apiMessages,
-            userContext: get().user || DEFAULT_USER
+            userContext: get().user || DEFAULT_USER,
+            isRoastMode: get().isRoastMode
           })
         });
 
@@ -1033,6 +1039,11 @@ export const useAppStore = create<AppStore>((set, get) => ({
       }
     };
   }),
+
+  // Roast Mode State
+  isRoastMode: false,
+  toggleRoastMode: () => set((state) => ({ isRoastMode: !state.isRoastMode })),
+  setRoastMode: (isRoastMode) => set({ isRoastMode }),
 
   // Reading Mode State
   isReadingMode: false,

@@ -18,7 +18,8 @@ import {
   Compass,
   X,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Flame
 } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
@@ -35,7 +36,9 @@ export default function AiMentorChatPage() {
     deleteConversation,
     isReadingMode,
     activeReadingMessageId,
-    setReadingMode
+    setReadingMode,
+    isRoastMode,
+    toggleRoastMode
   } = useAppStore();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -293,10 +296,26 @@ export default function AiMentorChatPage() {
               <h3 className="text-xs sm:text-sm font-bold truncate max-w-md" style={{ color: 'var(--text-primary)' }}>
                 {activeConv?.title || 'Mentor Guidance'}
               </h3>
-              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Context: Active Match Blueprint and Roadmap</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                {isRoastMode ? '🔥 Roast Mode Active' : 'Context: Active Match Blueprint and Roadmap'}
+              </p>
             </div>
           </div>
-          <Badge variant="glow" className="text-[10px] font-mono">ONLINE</Badge>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={toggleRoastMode}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                isRoastMode
+                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 shadow-sm shadow-rose-500/20'
+                  : 'bg-white/5 text-slate-400 border-white/10 hover:text-white hover:border-white/20'
+              }`}
+              title={isRoastMode ? 'Roast Mode Active: Critical & Humorous Feedback' : 'Enable Roast Mode for humorous critique'}
+            >
+              <Flame className={`w-3.5 h-3.5 ${isRoastMode ? 'text-rose-400 animate-bounce' : ''}`} />
+              <span>{isRoastMode ? 'Roast Mode ON' : 'Roast Mode'}</span>
+            </button>
+            <Badge variant="glow" className="text-[10px] font-mono">ONLINE</Badge>
+          </div>
         </div>
 
         {/* Scrollable messages container */}
