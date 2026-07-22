@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileDrawer } from '@/components/layout/MobileDrawer';
 import { CommandPalette } from '@/components/dashboard/CommandPalette';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { 
   Search, 
   Menu, 
@@ -38,6 +39,9 @@ export default function DashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [mounted, setMounted] = useState(false);
+  const [pageSearchQuery, setPageSearchQuery] = useState('');
+  const [hasNoMatches, setHasNoMatches] = useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -58,7 +62,7 @@ export default function DashboardLayout({
       try {
         const dbProfile = await getCurrentUserProfile();
 
-        // Build Clerk identity fields â€” always real, always available once loaded
+        // Build Clerk identity fields — always real, always available once loaded
         const clerkIdentity = clerkUser ? {
           fullName:
             clerkUser.fullName ||
@@ -78,7 +82,7 @@ export default function DashboardLayout({
             imageUrl: clerkIdentity?.imageUrl || dbProfile.imageUrl,
           });
         } else if (clerkIdentity) {
-          // DB returned null (not yet synced) â€” use Clerk identity only
+          // DB returned null (not yet synced) — use Clerk identity only
           syncUserProfile({
             fullName: clerkIdentity.fullName,
             email: clerkIdentity.email,
@@ -107,6 +111,155 @@ export default function DashboardLayout({
     };
     hydrateUser();
   }, [clerkLoaded, clerkUser, syncUserProfile]);
+
+  // Reset search query on pathname change
+  useEffect(() => {
+    setPageSearchQuery('');
+  }, [pathname]);
+
+  // Global Ctrl K to focus search
+  useEffect(() => {
+    const handleGlobalShortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleGlobalShortcut);
+    return () => window.removeEventListener('keydown', handleGlobalShortcut);
+  }, []);
+
+  // Inject search highlight styling dynamically to bypass CSS compiler scope limitations
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const styleId = 'search-highlight-styles';
+    let styleEl = document.getElementById(styleId);
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      styleEl.textContent = `
+        ::highlight(search-results) {
+          background-color: #a78bfa !important; /* purple-400 */
+          color: #000000 !important;
+        }
+        [data-theme="light"] ::highlight(search-results) {
+          background-color: #6366f1 !important; /* indigo-500 */
+          color: #ffffff !important;
+        }
+      `;
+      document.head.appendChild(styleEl);
+    }
+  }, []);
+
+  // Live page search highlight logic using CSS Custom Highlight API
+  useEffect(() => {
+    if (typeof CSS === 'undefined' || !CSS.highlights) {
+      return;
+    }
+
+    if (!pageSearchQuery.trim()) {
+      CSS.highlights.delete('search-results');
+      setHasNoMatches(false);
+      return;
+    }
+
+    const handleSearch = () => {
+      const container = document.getElementById('dashboard-content-area');
+      if (!container) return;
+
+      // Find all text nodes recursively
+      const textNodes: Node[] = [];
+      const walk = (node: Node) => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (node.nodeValue?.trim()) {
+            textNodes.push(node);
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as Element;
+          const tagName = el.tagName?.toLowerCase();
+          // Skip empty state container to prevent matching the query text in the description
+          if (el.id === 'search-empty-state') {
+            return;
+          }
+
+          // Skip code, script, style, form elements to avoid highlight issues on interactions
+          if (
+            tagName === 'script' ||
+            tagName === 'style' ||
+            tagName === 'noscript' ||
+            tagName === 'iframe' ||
+            tagName === 'input' ||
+            tagName === 'textarea' ||
+            tagName === 'select' ||
+            tagName === 'code'
+          ) {
+            return;
+          }
+
+          // Ensure the element is visible to the user before scanning its children
+          try {
+            const style = window.getComputedStyle(el);
+            if (
+              style.display === 'none' ||
+              style.visibility === 'hidden' ||
+              style.opacity === '0'
+            ) {
+              return;
+            }
+          } catch (e) {
+            // Safe fallback
+          }
+
+          for (let i = 0; i < node.childNodes.length; i++) {
+            walk(node.childNodes[i]);
+          }
+        } else {
+          // Walk other non-element, non-text nodes (like fragments/comments)
+          for (let i = 0; i < node.childNodes.length; i++) {
+            walk(node.childNodes[i]);
+          }
+        }
+      };
+      walk(container);
+
+      const ranges: Range[] = [];
+      const normalizedQuery = pageSearchQuery.toLowerCase();
+
+      for (const node of textNodes) {
+        const text = node.nodeValue?.toLowerCase() || '';
+        let index = text.indexOf(normalizedQuery);
+        while (index !== -1) {
+          try {
+            const range = new Range();
+            range.setStart(node, index);
+            range.setEnd(node, index + pageSearchQuery.length);
+            ranges.push(range);
+          } catch (e) {
+            console.error('Failed to create range:', e);
+          }
+          index = text.indexOf(normalizedQuery, index + pageSearchQuery.length);
+        }
+      }
+
+      console.log('[PageSearch] Query:', pageSearchQuery, 'Nodes scanned:', textNodes.length, 'Matches found:', ranges.length);
+
+      if (ranges.length > 0) {
+        const highlight = new Highlight(...ranges);
+        CSS.highlights.set('search-results', highlight);
+        setHasNoMatches(false);
+      } else {
+        CSS.highlights.delete('search-results');
+        setHasNoMatches(true);
+      }
+    };
+
+    const timeoutId = setTimeout(handleSearch, 50);
+
+    return () => {
+      clearTimeout(timeoutId);
+      CSS.highlights.delete('search-results');
+    };
+  }, [pageSearchQuery]);
 
   // Derive page name from route path
   const getPageTitle = () => {
@@ -190,8 +343,6 @@ export default function DashboardLayout({
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Open navigation drawer"
-              aria-expanded={mobileMenuOpen}
-              aria-controls="mobile-drawer"
               className="p-3 rounded-2xl border transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-sm"
               style={{
                 borderColor: 'var(--border-subtle)',
@@ -223,13 +374,9 @@ export default function DashboardLayout({
 
           {/* Top Actions: Search, Theme, Notify, Profile */}
           <div className="flex items-center space-x-4">
-            {/* Functional global command search */}
-            <button
-              type="button"
-              onClick={() => setCommandPaletteOpen(true)}
-              aria-label="Open global search (Ctrl K)"
-              title="Open global search (Ctrl K)"
-              className="hidden sm:flex items-center gap-3.5 h-11 min-w-60 lg:min-w-72 px-4 rounded-2xl border transition-all cursor-pointer hover:border-indigo-500/40 hover:bg-indigo-500/5 shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            {/* Functional page live search */}
+            <div
+              className="hidden sm:flex items-center gap-3 h-11 min-w-60 lg:min-w-72 px-4 rounded-2xl border transition-all shadow-sm focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-indigo-500/80"
               style={{
                 borderColor: 'var(--border-subtle)',
                 backgroundColor: 'var(--hover-bg)',
@@ -237,11 +384,31 @@ export default function DashboardLayout({
               }}
             >
               <Search className="w-4.5 h-4.5 text-indigo-400 shrink-0" aria-hidden="true" />
-              <span className="text-xs font-medium flex-1 text-left">Search pages and projects...</span>
-              <kbd className="hidden lg:inline-flex rounded-lg border border-white/10 bg-white/10 px-2 py-0.5 text-[11px] font-mono text-slate-400">
-                Ctrl K
-              </kbd>
-            </button>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search on page..."
+                value={pageSearchQuery}
+                onChange={(e) => setPageSearchQuery(e.target.value)}
+                className="bg-transparent border-none outline-none text-xs text-[var(--text-primary)] w-full placeholder:text-slate-500 py-2"
+                aria-label="Search page content"
+              />
+              {pageSearchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setPageSearchQuery('')}
+                  className="rounded-lg p-1 text-slate-400 hover:text-white transition hover:bg-white/5 cursor-pointer"
+                  aria-label="Clear search"
+                  title="Clear search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <kbd className="hidden lg:inline-flex rounded-lg border border-white/10 bg-white/10 px-2 py-0.5 text-[11px] font-mono text-slate-400">
+                  Ctrl K
+                </kbd>
+              )}
+            </div>
 
             {/* AI Career readiness Quick Summary Widget */}
             <Link
@@ -285,17 +452,28 @@ export default function DashboardLayout({
         <MobileDrawer isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
 
         {/* Main Dashboard Pages Slot (Children content) */}
-        <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto relative z-10">
+        <div className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto relative z-10" id="dashboard-content-area">
           <CommandPalette
-  open={commandPaletteOpen}
-  onOpenChange={setCommandPaletteOpen}
-  projects={projects}
-  onProjectSelect={selectProject}
-/>
-{children}
+            open={commandPaletteOpen}
+            onOpenChange={setCommandPaletteOpen}
+            projects={projects}
+            onProjectSelect={selectProject}
+          />
+          {hasNoMatches ? (
+            <div id="search-empty-state">
+              <EmptyState
+                title="No results found"
+                description={`We couldn't find any matches for "${pageSearchQuery}" on this page.`}
+                icon={<Search className="h-10 w-10 text-indigo-400" />}
+                ctaLabel="Clear Search"
+                onClick={() => setPageSearchQuery('')}
+              />
+            </div>
+          ) : (
+            children
+          )}
         </div>
       </div>
     </div>
   );
 }
-
