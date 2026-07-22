@@ -119,7 +119,7 @@ const INITIAL_ROADMAPS: Record<string, Roadmap> = {
 const INITIAL_CONVERSATIONS: ChatConversation[] = [
   {
     id: 'conv-1',
-    title: 'New Conversation',
+    title: 'AI Mentor Session',
     lastUpdated: new Date(),
     messages: [
       {
