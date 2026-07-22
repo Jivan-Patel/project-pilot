@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
@@ -13,6 +13,7 @@ import {
   Settings,
   X,
 } from 'lucide-react';
+import FocusTrap from 'focus-trap-react';
 
 type SearchableProject = {
   id: string;
@@ -265,13 +266,14 @@ export function CommandPalette({
         if (event.target === event.currentTarget) onOpenChange(false);
       }}
     >
-      <div
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="command-palette-title"
-        className="w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#090620] shadow-2xl shadow-indigo-950/50"
-      >
+      <FocusTrap focusTrapOptions={{ initialFocus: false, clickOutsideDeactivates: true, escapeDeactivates: false }}>
+        <div
+          ref={dialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="command-palette-title"
+          className="w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#090620] shadow-2xl shadow-indigo-950/50"
+        >
         <div className="flex items-center gap-3 border-b border-white/10 px-4 sm:px-5">
           <Search className="h-5 w-5 shrink-0 text-indigo-400" />
           <label htmlFor="global-command-search" className="sr-only">
@@ -285,15 +287,16 @@ export function CommandPalette({
             onKeyDown={handleKeyDown}
             placeholder="Search pages and projects..."
             autoComplete="off"
-            className="h-14 min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500 sm:h-16 sm:text-base"
+            className="h-14 min-w-0 flex-1 bg-transparent text-sm text-white outline-none placeholder:text-slate-500 sm:h-16 sm:text-base focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-lg px-2"
           />
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="rounded-lg p-2 text-slate-400 transition hover:bg-white/5 hover:text-white"
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-white/5 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             aria-label="Close global search"
+            title="Close global search"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
@@ -377,12 +380,13 @@ export function CommandPalette({
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-white/10 px-4 py-3 text-[11px] text-slate-500 sm:px-5">
-          <span>â†‘â†“ Navigate</span>
+          <span>↑↓ Navigate</span>
           <span>Enter Open</span>
           <span>Esc Close</span>
-          <span className="ml-auto">Ctrl/âŒ˜ + K</span>
+          <span className="ml-auto">Ctrl/⌘ + K</span>
         </div>
-      </div>
+        </div>
+      </FocusTrap>
     </div>
   );
 }
