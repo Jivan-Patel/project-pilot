@@ -1,13 +1,26 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, Check, Clock, FolderGit2, TrendingUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, 
+  ChevronDown, 
+  FolderGit2, 
+  Clock, 
+  Award, 
+  Sparkles, 
+  Cpu, 
+  ArrowUpRight, 
+  Check,
+  TrendingUp,
+  BrainCircuit
+} from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Card, CardFooter } from '@/components/ui/Card';
 import { TiltWrapper } from '@/components/ui/TiltWrapper';
 import {
   ProjectControls,
@@ -16,6 +29,7 @@ import {
   type ProjectView,
 } from '@/components/projects/ProjectControls';
 import type { Project } from '@/types';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const DEFAULT_STATUS: ProjectStatusFilter = 'All';
 const DEFAULT_SORT: ProjectSort = 'recent';
@@ -53,141 +67,131 @@ function setUrlFilters(searchQuery: string, status: ProjectStatusFilter, sortBy:
 export default function RecommendedProjectsPage() {
   const router = useRouter();
   const { projects, selectedProjectId, selectProject, initializeRoadmap } = useAppStore();
-
+  
+  // Local filtering states
   const [searchQuery, setSearchQuery] = useState('');
-  const [status, setStatus] = useState<ProjectStatusFilter>(DEFAULT_STATUS);
-  const [sortBy, setSortBy] = useState<ProjectSort>(DEFAULT_SORT);
-  const [view, setView] = useState<ProjectView>(DEFAULT_VIEW);
-  const [filtersReady, setFiltersReady] = useState(false);
+  const [activeTab, setActiveTab] = useState<'All' | 'Beginner' | 'Intermediate' | 'Advanced'>('All');
+  const [sortBy, setSortBy] = useState<'resumeValue' | 'duration'>('resumeValue');
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const urlStatus = params.get('status') as ProjectStatusFilter | null;
-    const urlSort = params.get('sort') as ProjectSort | null;
-    const storedView = window.localStorage.getItem(VIEW_STORAGE_KEY) as ProjectView | null;
-
-    setSearchQuery(params.get('q') ?? '');
-    if (['All', 'Planned', 'In Progress', 'Completed', 'Archived'].includes(urlStatus ?? '')) {
-      setStatus(urlStatus as ProjectStatusFilter);
-    }
-    if (['recent', 'oldest', 'name-asc', 'name-desc', 'progress'].includes(urlSort ?? '')) {
-      setSortBy(urlSort as ProjectSort);
-    }
-    if (storedView === 'grid' || storedView === 'list') setView(storedView);
-    setFiltersReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!filtersReady) return;
-    setUrlFilters(searchQuery, status, sortBy);
-  }, [filtersReady, searchQuery, sortBy, status]);
-
-  const handleViewChange = (nextView: ProjectView) => {
-    setView(nextView);
-    window.localStorage.setItem(VIEW_STORAGE_KEY, nextView);
-  };
-
+  // Trigger project selection & auto-generate roadmap if not already present
   const handleBuildProject = (projectId: string, title: string) => {
     selectProject(projectId);
     initializeRoadmap(projectId, title);
     router.push(`/dashboard/projects/${projectId}`);
   };
 
-  const displayedProjects = useMemo(() => {
-    const normalizedSearch = searchQuery.trim().toLowerCase();
-
-    return projects
-      .map((project, originalIndex) => ({ project, originalIndex }))
-      .filter(({ project }) => {
-        const matchesSearch =
-          !normalizedSearch ||
-          project.title.toLowerCase().includes(normalizedSearch) ||
-          project.description.toLowerCase().includes(normalizedSearch) ||
-          project.technologies.some((technology) => technology.toLowerCase().includes(normalizedSearch)) ||
-          project.category.toLowerCase().includes(normalizedSearch);
-        const matchesStatus = status === 'All' || getProjectStatus(project) === status;
-        return matchesSearch && matchesStatus;
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case 'oldest':
-            return getUpdatedTimestamp(a.project, a.originalIndex) - getUpdatedTimestamp(b.project, b.originalIndex);
-          case 'name-asc':
-            return a.project.title.localeCompare(b.project.title);
-          case 'name-desc':
-            return b.project.title.localeCompare(a.project.title);
-          case 'progress':
-            return (b.project.progress ?? 0) - (a.project.progress ?? 0);
-          case 'recent':
-          default:
-            return getUpdatedTimestamp(b.project, b.originalIndex) - getUpdatedTimestamp(a.project, a.originalIndex);
-        }
-      })
-      .map(({ project }) => project);
-  }, [projects, searchQuery, sortBy, status]);
-
-  const hasActiveFilters = searchQuery.trim() !== '' || status !== DEFAULT_STATUS || sortBy !== DEFAULT_SORT;
-
-  const clearFilters = () => {
-    setSearchQuery('');
-    setStatus(DEFAULT_STATUS);
-    setSortBy(DEFAULT_SORT);
-  };
+  // Filter logic
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch = 
+      project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.technologies.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      project.category.toLowerCase().includes(searchQuery.toLowerCase());
+      
+    const matchesTab = activeTab === 'All' || project.difficulty === activeTab;
+    
+    return matchesSearch && matchesTab;
+  }).sort((a, b) => {
+    if (sortBy === 'resumeValue') {
+      return b.resumeValue - a.resumeValue;
+    }
+    // Simple mock comparison for duration sorting
+    return b.duration.localeCompare(a.duration);
+  });
 
   return (
     <div className="space-y-8 pb-12">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Title Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="flex items-center space-x-2 text-2xl font-bold text-white">
-            <FolderGit2 className="h-6 w-6 text-indigo-400" />
+          <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
+            <FolderGit2 className="w-6 h-6 text-indigo-400" />
             <span>Recommended Project blue-prints</span>
           </h2>
-          <p className="mt-1 text-xs text-slate-400 sm:text-sm">
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
             Custom engineered portfolios created to shut down your structural skill gaps.
           </p>
         </div>
-        <Badge variant="glow" className="w-fit self-start px-3 py-1 font-mono font-bold sm:self-center">
+
+        {/* Top summary badge */}
+        <Badge variant="glow" className="w-fit self-start sm:self-center font-bold px-3 py-1 font-mono">
           🛩 ACTIVE TARGET: {projects.length} OPTIONS LOADED
         </Badge>
       </div>
 
-      <ProjectControls
-        searchQuery={searchQuery}
-        status={status}
-        sortBy={sortBy}
-        view={view}
-        matchingCount={displayedProjects.length}
-        totalCount={projects.length}
-        hasActiveFilters={hasActiveFilters}
-        onSearchChange={setSearchQuery}
-        onStatusChange={setStatus}
-        onSortChange={setSortBy}
-        onViewChange={handleViewChange}
-        onClear={clearFilters}
-      />
+      {/* Filter and Search Action Box */}
+      <div className="glass-panel p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-4 bg-[#08051e]/40">
+        
+        {/* Search Field */}
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search projects or technologies..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[#0a071a]/50 text-xs rounded-xl border border-white/5 px-4 py-3 pl-11 focus:outline-none focus:border-indigo-500/55 text-slate-200 placeholder-slate-500"
+          />
+        </div>
 
-      <AnimatePresence mode="popLayout">
-        {displayedProjects.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            className="glass-panel rounded-3xl p-12 text-center"
+        {/* Tab Filters */}
+        <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
+          {(['All', 'Beginner', 'Intermediate', 'Advanced'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                activeTab === tab 
+                  ? 'bg-indigo-600/15 border-indigo-500/30 text-indigo-300 shadow-[0_0_10px_rgba(99,102,241,0.05)]' 
+                  : 'bg-transparent border-white/5 text-slate-400 hover:text-white hover:bg-white/2'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort Trigger */}
+        <div className="flex items-center space-x-2.5 w-full md:w-auto border-t md:border-t-0 border-white/5 pt-3 md:pt-0 justify-between">
+          <span className="text-xs text-slate-500 font-mono uppercase tracking-wider shrink-0">Sort By:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="text-xs font-semibold rounded-xl border px-3 py-2.5 focus:outline-none focus:border-indigo-500/55 cursor-pointer"
+            style={{ backgroundColor: 'var(--surface-secondary)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
           >
-            <FolderGit2 className="mx-auto mb-4 h-12 w-12 text-slate-600" />
-            <h3 className="mb-1 text-base font-bold text-white">No projects match these filters</h3>
-            <p className="mx-auto max-w-md text-xs text-slate-400">
-              Try a different status, change the search phrase, or clear all filters to restore the complete project list.
-            </p>
-            {hasActiveFilters && (
-              <Button variant="outline" className="mt-5" onClick={clearFilters}>
-                Clear all filters
-              </Button>
-            )}
-          </motion.div>
+            <option value="resumeValue">Resume Value Rank</option>
+            <option value="duration">Completion Duration</option>
+          </select>
+        </div>
+
+      </div>
+
+      {/* Projects Grid */}
+      <AnimatePresence mode="popLayout">
+        {projects.length === 0 ? (
+          <EmptyState
+            title="No Projects Yet"
+            description="You don't have any project recommendations yet. Complete your onboarding to receive personalized AI-powered project suggestions."
+            icon={<FolderGit2 className="h-10 w-10 sm:h-12 sm:w-12" />}
+            ctaLabel="Complete Onboarding"
+            ctaHref="/dashboard/settings"
+            secondaryLabel="Ask AI Mentor"
+            secondaryHref="/dashboard/mentor"
+          />
+        ) : filteredProjects.length === 0 ? (
+          <EmptyState
+            title="No Matching Projects"
+            description="No projects match your current search and difficulty filters. Clear the filters to view all available recommendations."
+            icon={<Search className="h-10 w-10 sm:h-12 sm:w-12" />}
+            ctaLabel="Clear Filters"
+            onClick={() => {
+              setSearchQuery('');
+              setActiveTab('All');
+            }}
+          />
         ) : (
-          <div className={view === 'grid' ? 'grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3' : 'space-y-4'}>
-            {displayedProjects.map((project) => {
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredProjects.map((project) => {
               const isSelected = selectedProjectId === project.id;
               const projectStatus = getProjectStatus(project);
               const progress = project.progress ?? 0;
@@ -214,11 +218,11 @@ export default function RecommendedProjectsPage() {
               return (
                 <motion.div
                   key={project.id}
-                  layout
-                  initial={{ opacity: 0, y: 16 }}
+                  layoutId={project.id}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 8 }}
-                  transition={{ duration: 0.25 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.4 }}
                 >
                   <TiltWrapper className="h-full">
                     <Card

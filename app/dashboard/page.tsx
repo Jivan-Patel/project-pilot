@@ -1,15 +1,27 @@
-'use client';
+"use client";
 
-import { Badge } from '@/components/ui/Badge';
-import { Github } from '@/components/ui/BrandIcons';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Progress } from '@/components/ui/Progress';
-import { ActivityTimeline } from '@/components/projects/ActivityTimeline';
-import { useAppStore } from '@/store/useAppStore';
-import { TiltWrapper } from '@/components/ui/TiltWrapper';
-import { useClerk, useUser } from '@clerk/nextjs';
-import { motion } from 'framer-motion';
+import {
+  BarChartSkeleton,
+  RadarChartSkeleton,
+} from "@/components/charts/ChartSkeleton";
+import { ActivityTimeline } from "@/components/projects/ActivityTimeline";
+import { Badge } from "@/components/ui/Badge";
+import { Github } from "@/components/ui/BrandIcons";
+import { Button } from "@/components/ui/Button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/Card";
+import { Progress } from "@/components/ui/Progress";
+import Tooltip from "@/components/ui/Tooltip";
+import { useAppStore } from "@/store/useAppStore";
+import { TiltWrapper } from "@/components/ui/TiltWrapper";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { motion } from "framer-motion";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -18,26 +30,38 @@ import {
   Cpu,
   FileText,
   GitMerge,
-  Sparkles
-} from 'lucide-react';
-import Link from 'next/link';
-import React from 'react';
-import {
-  Bar,
-  BarChart,
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from 'recharts';
+  Info,
+  Sparkles,
+} from "lucide-react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import React from "react";
+
+const SkillRadarChart = dynamic(
+  () => import("@/components/charts/SkillRadarChart"),
+  {
+    ssr: false,
+    loading: () => <RadarChartSkeleton />,
+  },
+);
+
+const CommitBarChart = dynamic(
+  () => import("@/components/charts/CommitBarChart"),
+  {
+    ssr: false,
+    loading: () => <BarChartSkeleton />,
+  },
+);
 
 export default function MainDashboardPage() {
-  const { user, projects, activities, careerScore, githubAnalytics, selectProject } = useAppStore();
+  const {
+    user,
+    projects,
+    activities,
+    careerScore,
+    githubAnalytics,
+    selectProject,
+  } = useAppStore();
   const { user: clerkUser } = useUser();
 
   const [mounted, setMounted] = React.useState(false);
@@ -47,19 +71,21 @@ export default function MainDashboardPage() {
 
   // Radar chart formatted data
   const radarData = [
-    { subject: 'Frontend', A: careerScore.frontendReadiness, fullMark: 100 },
-    { subject: 'Backend', A: careerScore.backendReadiness, fullMark: 100 },
-    { subject: 'DevOps', A: careerScore.devOpsReadiness, fullMark: 100 },
-    { subject: 'AI Orchestration', A: 40, fullMark: 100 }, // Mock scores representing missing skills gaps
-    { subject: 'Databases', A: 60, fullMark: 100 },
-    { subject: 'Architecture', A: 70, fullMark: 100 }
+    { subject: "Frontend", A: careerScore.frontendReadiness, fullMark: 100 },
+    { subject: "Backend", A: careerScore.backendReadiness, fullMark: 100 },
+    { subject: "DevOps", A: careerScore.devOpsReadiness, fullMark: 100 },
+    { subject: "AI Orchestration", A: 40, fullMark: 100 }, // Mock scores representing missing skills gaps
+    { subject: "Databases", A: 60, fullMark: 100 },
+    { subject: "Architecture", A: 70, fullMark: 100 },
   ];
 
   // Bar chart formatted commit activities
   const commitData = githubAnalytics.recentCommits;
 
   // Derive top gaps and improvements
-  const highPriorityGaps = careerScore.missingSkills.filter(s => s.importance === 'High');
+  const highPriorityGaps = careerScore.missingSkills.filter(
+    (s) => s.importance === "High",
+  );
   const activeRecommendedProject = projects[0]; // OmniAI Agentic Dashboard
 
   return (
@@ -69,23 +95,42 @@ export default function MainDashboardPage() {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         className="glass-panel p-6 sm:p-8 rounded-3xl border-indigo-500/25 flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
-        style={{ backgroundColor: 'var(--surface-card)' }}
+        style={{ backgroundColor: "var(--surface-card)" }}
       >
         <div className="space-y-2">
           <div className="flex items-center space-x-2 text-indigo-400">
-            <Sparkles className="w-4 h-4 animate-spin" style={{ animationDuration: '3s' }} />
-            <span className="text-xs font-bold uppercase tracking-wider font-mono">Welcome back to Pilot Terminal</span>
+            <Sparkles
+              className="w-4 h-4 animate-spin"
+              style={{ animationDuration: "3s" }}
+            />
+            <span className="text-xs font-bold uppercase tracking-wider font-mono">
+              Welcome back to Pilot Terminal
+            </span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold" style={{ color: 'var(--text-primary)' }}>
-            Hello, {user?.name || clerkUser?.firstName || 'Pilot'}
+          <h2
+            className="text-2xl sm:text-3xl font-extrabold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Hello, {user?.name || clerkUser?.firstName || "Pilot"}
           </h2>
-          <p className="text-xs sm:text-sm max-w-xl leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-            Your career target is set to <span className="text-indigo-400 font-bold">{user?.careerGoal}</span>. Complete recommendations to close your remaining skill gaps.
+          <p
+            className="text-xs sm:text-sm max-w-xl leading-relaxed"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Your career target is set to{" "}
+            <span className="text-indigo-400 font-bold">
+              {user?.careerGoal}
+            </span>
+            . Complete recommendations to close your remaining skill gaps.
           </p>
         </div>
 
         <Link href="/dashboard/projects" className="shrink-0 w-full md:w-auto">
-          <Button variant="premium" className="w-full h-12" rightIcon={<ArrowUpRight className="w-4.5 h-4.5" />}>
+          <Button
+            variant="premium"
+            className="w-full h-12"
+            rightIcon={<ArrowUpRight className="w-4.5 h-4.5" />}
+          >
             View Recommendations
           </Button>
         </Link>
@@ -93,37 +138,41 @@ export default function MainDashboardPage() {
 
       {/* Main Core Widgets Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* WIDGET 1: CAREER READINESS RADAR */}
-        <Card hoverEffect={true} glowColor="#6366f1" className="bg-[#08051e]/40 lg:col-span-2 flex flex-col justify-between">
+        <Card
+          hoverEffect={true}
+          glowColor="#6366f1"
+          className="bg-[#08051e]/40 lg:col-span-2 flex flex-col justify-between"
+        >
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
-              <CardTitle className="text-base font-bold">Career Skill Match Blueprint</CardTitle>
-              <CardDescription className="text-xs">Granular analysis across standard full-stack categories.</CardDescription>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base font-bold">
+                  Career Skill Match Blueprint
+                </CardTitle>
+
+                <Tooltip content="Shows how your skills compare across different full-stack areas like frontend, backend, DevOps, and databases.">
+                  <Info
+                    className="h-4 w-4 cursor-help text-slate-400 hover:text-indigo-400 transition-colors"
+                    aria-label="Career Skill Match information"
+                  />
+                </Tooltip>
+              </div>
+              <CardDescription className="text-xs">
+                Granular analysis across standard full-stack categories.
+              </CardDescription>
             </div>
             <Badge variant="glow">Score: {careerScore.overallScore}%</Badge>
           </CardHeader>
           <CardContent className="h-[280px] sm:h-[320px] flex items-center justify-center pt-4">
-            {mounted && (
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
-                  <PolarGrid stroke="rgba(255, 255, 255, 0.08)" />
-                  <PolarAngleAxis dataKey="subject" stroke="#94a3b8" fontSize={11} fontWeight={600} />
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="rgba(255, 255, 255, 0.15)" tickCount={4} fontSize={9} />
-                  <Radar 
-                    name="Current Skills" 
-                    dataKey="A" 
-                    stroke="#6366f1" 
-                    fill="#6366f1" 
-                    fillOpacity={0.25} 
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            )}
+            <SkillRadarChart data={radarData} />
           </CardContent>
           <CardFooter className="pt-2 flex items-center justify-between text-xs text-slate-400">
             <span>Core Match rate: 78%</span>
-            <Link href="/dashboard/career" className="text-indigo-400 font-semibold hover:underline flex items-center">
+            <Link
+              href="/dashboard/career"
+              className="text-indigo-400 font-semibold hover:underline flex items-center"
+            >
               Detailed breakdown <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           </CardFooter>
@@ -137,17 +186,42 @@ export default function MainDashboardPage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2 text-indigo-300">
                   <FileText className="w-4 h-4" />
-                  <span className="text-xs font-semibold uppercase tracking-wider">Resume Score</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider">
+                      Resume Score
+                    </span>
+
+                    <Tooltip content="ATS score showing how well your resume matches recruiter and applicant tracking system expectations.">
+                      <Info className="h-3.5 w-3.5 cursor-help text-slate-400 hover:text-indigo-400" />
+                    </Tooltip>
+                  </div>
                 </div>
                 <Badge variant="success">Good match</Badge>
               </div>
               <div className="flex items-baseline space-x-2">
-                <span className="text-4xl font-extrabold" style={{ color: 'var(--text-primary)' }}>{careerScore.resumeScore}%</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>ATS Rating</span>
+                <span
+                  className="text-4xl font-extrabold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {careerScore.resumeScore}%
+                </span>
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  ATS Rating
+                </span>
               </div>
-              <Progress value={careerScore.resumeScore} className="h-1.5 mt-4" />
-              <p className="text-[11px] mt-3" style={{ color: 'var(--text-muted)' }}>
-                12 High-priority keywords detected. Missing AI/Vector descriptors.
+              <Progress
+                value={careerScore.resumeScore}
+                className="h-1.5 mt-4"
+              />
+              <p
+                className="text-[11px] mt-3"
+                style={{ color: "var(--text-muted)" }}
+              >
+                12 High-priority keywords detected. Missing AI/Vector
+                descriptors.
               </p>
             </CardContent>
           </Card>
@@ -157,28 +231,55 @@ export default function MainDashboardPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-2 text-purple-300">
-                  <Github className="w-4 h-4 animate-spin" style={{ animationDuration: '6s' }} />
-                  <span className="text-xs font-semibold uppercase tracking-wider">GitHub Scanner</span>
+                  <Github
+                    className="w-4 h-4 animate-spin"
+                    style={{ animationDuration: "6s" }}
+                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider">
+                      GitHub Scanner
+                    </span>
+
+                    <Tooltip content="Calculated from repository activity, commit frequency, and contribution consistency.">
+                      <Info className="h-3.5 w-3.5 cursor-help text-slate-400 hover:text-indigo-400" />
+                    </Tooltip>
+                  </div>
                 </div>
                 <Badge variant="glow">Synced</Badge>
               </div>
               <div className="flex items-baseline space-x-2">
-                <span className="text-4xl font-extrabold" style={{ color: 'var(--text-primary)' }}>{githubAnalytics.consistencyScore}</span>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Consistency Score</span>
+                <span
+                  className="text-4xl font-extrabold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {githubAnalytics.consistencyScore}
+                </span>
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Consistency Score
+                </span>
               </div>
-              <Progress value={githubAnalytics.consistencyScore} barClassName="bg-gradient-to-r from-purple-500 to-pink-500" className="h-1.5 mt-4" />
-              <p className="text-[11px] mt-3" style={{ color: 'var(--text-muted)' }}>
-                Scanned {githubAnalytics.totalRepos} repositories. {githubAnalytics.totalCommits} historical commits mapped.
+              <Progress
+                value={githubAnalytics.consistencyScore}
+                barClassName="bg-gradient-to-r from-purple-500 to-pink-500"
+                className="h-1.5 mt-4"
+              />
+              <p
+                className="text-[11px] mt-3"
+                style={{ color: "var(--text-muted)" }}
+              >
+                Scanned {githubAnalytics.totalRepos} repositories.{" "}
+                {githubAnalytics.totalCommits} historical commits mapped.
               </p>
             </CardContent>
           </Card>
         </div>
-
       </div>
 
       {/* Grid: Recommended Project, Gaps, Weekly schedule */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* Recommended Project Blueprint */}
         {(() => {
           const themeColor = activeRecommendedProject.difficulty === 'Advanced' 
@@ -245,26 +346,51 @@ export default function MainDashboardPage() {
         })()}
 
         {/* Missing Skills Gaps Indicator list */}
-        <Card hoverEffect={true} className="bg-[#08051e]/40 flex flex-col justify-between">
+        <Card
+          hoverEffect={true}
+          className="bg-[#08051e]/40 flex flex-col justify-between"
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center space-x-2 text-rose-400 mb-1">
               <AlertTriangle className="w-4 h-4 shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Detected Skill Gaps</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">
+                Detected Skill Gaps
+              </span>
             </div>
-            <CardTitle className="text-base font-bold">High Priority Gaps</CardTitle>
-            <CardDescription className="text-xs">Acquiring these will yield the largest salary impacts.</CardDescription>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-bold">
+                High Priority Gaps
+              </CardTitle>
+
+              <Tooltip content="These are the most impactful skills missing from your profile based on your selected career goal.">
+                <Info className="h-4 w-4 cursor-help text-slate-400 hover:text-indigo-400" />
+              </Tooltip>
+            </div>
+            <CardDescription className="text-xs">
+              Acquiring these will yield the largest salary impacts.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 flex-1 pt-1">
             {highPriorityGaps.length === 0 ? (
-              <p className="text-xs text-slate-500 italic">Outstanding! You have no high-priority skill gaps.</p>
+              <p className="text-xs text-slate-500 italic">
+                Outstanding! You have no high-priority skill gaps.
+              </p>
             ) : (
               highPriorityGaps.slice(0, 3).map((gap, idx) => (
-                <div key={idx} className="p-2.5 bg-white/2 hover:bg-white/4 rounded-xl border border-white/5 flex items-center justify-between text-xs transition-colors">
+                <div
+                  key={idx}
+                  className="p-2.5 bg-white/2 hover:bg-white/4 rounded-xl border border-white/5 flex items-center justify-between text-xs transition-colors"
+                >
                   <div className="space-y-0.5 truncate pr-2">
-                    <h4 className="font-bold text-slate-200 truncate">{gap.name}</h4>
+                    <h4 className="font-bold text-slate-200 truncate">
+                      {gap.name}
+                    </h4>
                     <p className="text-[10px] text-slate-400">{gap.category}</p>
                   </div>
-                  <Badge variant="glow" className="shrink-0 bg-rose-500/10 border-rose-500/20 text-rose-300">
+                  <Badge
+                    variant="glow"
+                    className="shrink-0 bg-rose-500/10 border-rose-500/20 text-rose-300"
+                  >
                     High Priority
                   </Badge>
                 </div>
@@ -279,85 +405,145 @@ export default function MainDashboardPage() {
             </Link>
           </CardFooter>
         </Card>
-
       </div>
 
       {/* Commit Activity and Weekly planner Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         {/* GitHub Commit Graphs (Recharts) */}
-        <Card hoverEffect={true} className="bg-[#08051e]/40 lg:col-span-2 flex flex-col justify-between">
+        <Card
+          hoverEffect={true}
+          className="bg-[#08051e]/40 lg:col-span-2 flex flex-col justify-between"
+        >
           <CardHeader className="pb-2">
             <div className="flex items-center space-x-2 text-indigo-400 mb-1">
               <GitMerge className="w-4 h-4 shrink-0" />
-              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Active contribution index</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">
+                Active contribution index
+              </span>
             </div>
-            <CardTitle className="text-base font-bold">GitHub Weekly Commit Rates</CardTitle>
-            <CardDescription className="text-xs">Commit consistency scores measured from active repository pushes.</CardDescription>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-bold">
+                GitHub Weekly Commit Rates
+              </CardTitle>
+
+              <Tooltip content="Displays your recent weekly commit activity to help track coding consistency.">
+                <Info className="h-4 w-4 cursor-help text-slate-400 hover:text-indigo-400" />
+              </Tooltip>
+            </div>
+            <CardDescription className="text-xs">
+              Commit consistency scores measured from active repository pushes.
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-[200px] pt-4">
-            {mounted && (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={commitData}>
-                  <XAxis dataKey="day" stroke="#94a3b8" fontSize={11} tickLine={false} axisLine={false} />
-                  <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#060417', borderColor: 'rgba(255,255,255,0.06)', borderRadius: 12 }} 
-                    labelStyle={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}
-                  />
-                  <Bar 
-                    dataKey="commits" 
-                    fill="url(#barGradient)" 
-                    radius={[6, 6, 0, 0]} 
-                  />
-                  <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" />
-                      <stop offset="100%" stopColor="#6366f1" />
-                    </linearGradient>
-                  </defs>
-                </BarChart>
-              </ResponsiveContainer>
-            )}
+            <CommitBarChart data={commitData} />
           </CardContent>
-          <CardFooter className="pt-2 flex items-center justify-between text-xs" style={{ color: 'var(--text-muted)' }}>
+          <CardFooter
+            className="pt-2 flex items-center justify-between text-xs"
+            style={{ color: "var(--text-muted)" }}
+          >
             <span>Average: 5.7 commits / day</span>
-            <Link href="/dashboard/github" className="text-indigo-400 font-semibold hover:underline flex items-center">
+            <Link
+              href="/dashboard/github"
+              className="text-indigo-400 font-semibold hover:underline flex items-center"
+            >
               GitHub analytics <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
             </Link>
           </CardFooter>
         </Card>
 
         {/* Weekly study planner */}
-        <Card hoverEffect={true} className="bg-[#08051e]/40 flex flex-col justify-between">
+        <Card
+          hoverEffect={true}
+          className="bg-[#08051e]/40 flex flex-col justify-between"
+        >
           <CardHeader className="pb-3">
             <div className="flex items-center space-x-2 text-indigo-300 mb-1">
               <Calendar className="w-4.5 h-4.5" />
-              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">Weekly Pilot Plan</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider font-mono">
+                Weekly Pilot Plan
+              </span>
             </div>
-            <CardTitle className="text-base font-bold">Week 1 Ingestion Plan</CardTitle>
-            <CardDescription className="text-xs">Based on {user?.skills.slice(0, 3).join(', ')} skills foundation.</CardDescription>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-bold">
+                Week 1 Ingestion Plan
+              </CardTitle>
+
+              <Tooltip content="A personalized weekly roadmap generated from your current skills and career goals.">
+                <Info className="h-4 w-4 cursor-help text-slate-400 hover:text-indigo-400" />
+              </Tooltip>
+            </div>
+            <CardDescription className="text-xs">
+              Based on {user?.skills.slice(0, 3).join(", ")} skills foundation.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 flex-1 pt-1 text-xs">
             <div className="flex items-start space-x-3">
-              <Badge variant="glow" className="shrink-0 bg-indigo-600/20 text-indigo-300 border-indigo-600/30">D1-3</Badge>
+              <Badge
+                variant="glow"
+                className="shrink-0 bg-indigo-600/20 text-indigo-300 border-indigo-600/30"
+              >
+                D1-3
+              </Badge>
               <div>
-                <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>System Shell Ingestion</h4>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Build dashboard containers, set styling custom properties, initialize Git.</p>
+                <h4
+                  className="font-bold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  System Shell Ingestion
+                </h4>
+                <p
+                  className="text-[11px] mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Build dashboard containers, set styling custom properties,
+                  initialize Git.
+                </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <Badge variant="glow" className="shrink-0 bg-purple-600/20 text-purple-300 border-purple-600/30">D4-5</Badge>
+              <Badge
+                variant="glow"
+                className="shrink-0 bg-purple-600/20 text-purple-300 border-purple-600/30"
+              >
+                D4-5
+              </Badge>
               <div>
-                <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>Connect Orchestrator APIs</h4>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Configure Next.js Server Actions connecting GPT OpenAI Assistant SDK hooks.</p>
+                <h4
+                  className="font-bold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Connect Orchestrator APIs
+                </h4>
+                <p
+                  className="text-[11px] mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Configure Next.js Server Actions connecting GPT OpenAI
+                  Assistant SDK hooks.
+                </p>
               </div>
             </div>
             <div className="flex items-start space-x-3">
-              <Badge variant="glow" className="shrink-0 bg-slate-600/20 text-slate-400 border-slate-600/30">D6-7</Badge>
+              <Badge
+                variant="glow"
+                className="shrink-0 bg-slate-600/20 text-slate-400 border-slate-600/30"
+              >
+                D6-7
+              </Badge>
               <div>
-                <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>Zod schemas & Types</h4>
-                <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Add strict TypeScript interfaces and validation checks to coordinate state payload forms.</p>
+                <h4
+                  className="font-bold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  Zod schemas & Types
+                </h4>
+                <p
+                  className="text-[11px] mt-0.5"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  Add strict TypeScript interfaces and validation checks to
+                  coordinate state payload forms.
+                </p>
               </div>
             </div>
           </CardContent>
@@ -369,7 +555,6 @@ export default function MainDashboardPage() {
             </Link>
           </CardFooter>
         </Card>
-
       </div>
 
       {/* Project Activity Timeline */}
