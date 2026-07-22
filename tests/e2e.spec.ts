@@ -22,7 +22,7 @@ test.describe('E2E Test Suite', () => {
     await page.goto('/dashboard/mentor');
     
     // Check if the mentor chat interface is loaded
-    const isMentorLoaded = await page.isVisible('text="Mentor Guidance"');
+    const isMentorLoaded = await page.isVisible('text=Ask AI Mentor');
     expect(isMentorLoaded).toBeTruthy();
   });
 });
