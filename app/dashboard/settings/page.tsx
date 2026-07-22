@@ -1,32 +1,25 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Settings,
-  User as UserIcon,
-  Bell,
-  Eye,
-  Sparkles,
-  Trash2,
-  RefreshCw,
-  CheckCircle,
-  Sun,
-  Moon,
-  Monitor,
-  AlertCircle,
-  Camera,
-  Loader2
-} from 'lucide-react';
-import { Github, Linkedin } from '@/components/ui/BrandIcons';
-import { useAppStore } from '@/store/useAppStore';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Github, Linkedin } from '@/components/ui/BrandIcons';
 import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import { useTheme } from '@/lib/ThemeProvider';
 import type { Theme } from '@/lib/ThemeProvider';
-
+import { useTheme } from '@/lib/ThemeProvider';
+import { useAppStore } from '@/store/useAppStore';
+import {
+  Camera,
+  Loader2,
+  Moon,
+  RefreshCw,
+  Settings,
+  Sun,
+  Trash2,
+  User as UserIcon
+} from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { toast } from "sonner";
 // UploadThing Integrations
 import { updateProfileAvatar } from '@/app/actions/user';
 
@@ -46,50 +39,43 @@ export default function SettingsPage() {
   const [notifyMentorReplied, setNotifyMentorReplied] = useState(true);
   const [notifyRecruiterScans, setNotifyRecruiterScans] = useState(false);
 
-  // Success toast helpers
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [resetSuccess, setResetSuccess] = useState(false);
+ 
 
   // --- AVATAR UPLOAD STATE HOOKS ---
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>((user as any)?.imageUrl || null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
-  const [avatarSuccess, setAvatarSuccess] = useState<string | null>(null);
 
   const isUploading = false; // Mocking uploading state for compatibility
 
-  const handleSaveAvatar = async () => {
-    if (!previewUrl) return;
-    
-    // Save to global state instantly as base64
-    updateAvatar(previewUrl);
-    
-    try {
-      // Attempt to persist to DB (optional fallback)
-      await updateProfileAvatar(previewUrl);
-    } catch(e) {}
-    
-    setAvatarSuccess("Avatar updated locally successfully!");
+const handleSaveAvatar = async () => {
+  if (!previewUrl) return;
+
+  updateAvatar(previewUrl);
+
+  try {
+    await updateProfileAvatar(previewUrl);
+    toast.success("Avatar updated successfully.");
     setAvatarFile(null);
-  };
+  } catch {
+    toast.error("Failed to update avatar.");
+  }
+};
 
   const handleAvatarSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAvatarError(null);
-    setAvatarSuccess(null);
     const file = e.target.files?.[0];
     if (!file) return;
 
     // Validate MIME formats
     const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedMimeTypes.includes(file.type)) {
-      setAvatarError("Format unsupported. Use JPG, JPEG, PNG, or WEBP.");
+     toast.error("Format unsupported. Use JPG, PNG or WEBP.");
       return;
     }
 
     // Enforce 5MB limit
     if (file.size > 5 * 1024 * 1024) {
-      setAvatarError("Image file size exceeds the 5MB limit.");
+       toast.error("Image exceeds the 5MB limit.");
       return;
     }
 
@@ -108,32 +94,44 @@ export default function SettingsPage() {
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile(profileName, profileEmail, profileGoal);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+   toast.success("Profile updated successfully.");
   };
 
   // Reset Onboarding pathway
   const handleResetOnboarding = () => {
     resetOnboarding();
-    setResetSuccess(true);
-    setTimeout(() => setResetSuccess(false), 2000);
+   toast.success("Onboarding reset successfully.");
   };
 
   const [gitUsername, setGitUsername] = useState(githubAnalytics.username || '');
   const [gitLoading, setGitLoading] = useState(false);
 
   // Toggle Git Connection
-  const handleToggleGithub = async () => {
-    if (githubAnalytics.connected) {
+ const handleToggleGithub = async () => {
+  if (githubAnalytics.connected) {
+    try {
       disconnectGithub();
-      setGitUsername('');
-    } else {
-      if (!gitUsername.trim()) return;
-      setGitLoading(true);
-      await connectGithub(gitUsername.trim());
-      setGitLoading(false);
+      toast.success("GitHub disconnected.");
+      setGitUsername("");
+    } catch {
+      toast.error("Failed to disconnect GitHub.");
     }
-  };
+    return;
+  }
+
+  if (!gitUsername.trim()) return;
+
+  setGitLoading(true);
+
+  try {
+    await connectGithub(gitUsername.trim());
+    toast.success("GitHub connected successfully.");
+  } catch {
+    toast.error("Failed to connect GitHub.");
+  } finally {
+    setGitLoading(false);
+  }
+};
 
   /** Theme option card definition */
   const themeOptions: { value: Theme; label: string; description: string; icon: React.ReactNode }[] = [
@@ -244,18 +242,7 @@ export default function SettingsPage() {
                     )}
                   </div>
 
-                  {avatarError && (
-                    <p className="text-[11px] text-rose-400 font-medium flex items-center mt-1">
-                      <AlertCircle className="w-3.5 h-3.5 mr-1" />
-                      {avatarError}
-                    </p>
-                  )}
-                  {avatarSuccess && (
-                    <p className="text-[11px] text-emerald-400 font-medium flex items-center mt-1">
-                      <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                      {avatarSuccess}
-                    </p>
-                  )}
+                 
                 </div>
               </div>
               
@@ -288,16 +275,7 @@ export default function SettingsPage() {
                 />
 
                 <div className="flex items-center justify-between pt-4">
-                  {saveSuccess && (
-                    <span
-                      role="status"
-                      aria-live="polite"
-                      className="text-xs text-emerald-400 font-semibold flex items-center"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-1.5 animate-bounce" aria-hidden="true" />
-                      Changes saved successfully
-                    </span>
-                  )}
+                 
                   <Button
                     type="submit"
                     variant="premium"
@@ -484,12 +462,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  {resetSuccess && (
-                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center">
-                      <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                      Erased. Go to navbar CTAs.
-                    </span>
-                  )}
+                 
                   <Button
                     variant="outline"
                     size="sm"

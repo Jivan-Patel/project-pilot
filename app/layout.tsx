@@ -1,8 +1,9 @@
+import SonnerProvider from "@/components/providers/SonnerProvider";
+import { ThemeProvider } from "@/lib/ThemeProvider";
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from '@clerk/nextjs';
-import { ThemeProvider } from '@/lib/ThemeProvider';
-import Script from 'next/script';
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -17,7 +18,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ProjectPilot AI — Choose the Right Career Project",
-  description: "Your intelligent career co-pilot that scans your resume and GitHub, identifies skill gaps, and recommends professional-grade project roadmaps with dedicated AI mentors.",
+  description:
+    "Your intelligent career co-pilot that scans your resume and GitHub, identifies skill gaps, and recommends professional-grade project roadmaps with dedicated AI mentors.",
 };
 
 export default function RootLayout({
@@ -60,6 +62,7 @@ export default function RootLayout({
               can access useTheme() to read or change the active theme */}
           <ThemeProvider>
             {children}
+            <SonnerProvider />
           </ThemeProvider>
           {/* Hide Clerk dev-mode badge in development */}
           <Script id="clerk-badge-hider" strategy="afterInteractive">
