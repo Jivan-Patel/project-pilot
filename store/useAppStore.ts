@@ -317,6 +317,11 @@ interface AppStore {
   // Career Score State
   careerScore: CareerScore;
   recalculateCareerScore: () => void;
+
+  // Reading Mode State
+  isReadingMode: boolean;
+  activeReadingMessageId: string | null;
+  setReadingMode: (isReadingMode: boolean, activeReadingMessageId?: string | null) => void;
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
@@ -987,5 +992,13 @@ export const useAppStore = create<AppStore>((set, get) => ({
         overallScore: newScore
       }
     };
+  }),
+
+  // Reading Mode State
+  isReadingMode: false,
+  activeReadingMessageId: null,
+  setReadingMode: (isReadingMode, activeReadingMessageId = null) => set({
+    isReadingMode,
+    activeReadingMessageId
   })
 }));
