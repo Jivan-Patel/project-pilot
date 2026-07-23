@@ -42,11 +42,22 @@ import {
   updateProfileAvatar 
 } from '@/app/actions/user';
 import { extractSkillsFromResume } from '@/app/actions/extractSkills';
-import { toast } from 'sonner'; // Core hook/utility for the global toast system
+import { toast } from 'sonner'; 
 
-// Client API Handlers
 export default function SettingsPage() {
-  const { user, onboardingData, updateProfile, updateAvatar, updatePortfolioVisibility, resetOnboarding, githubAnalytics, connectGithub, disconnectGithub, updateUserSkills, updateLinksStore } = useAppStore();
+  const { 
+    user, 
+    onboardingData, 
+    updateProfile, 
+    updateAvatar, 
+    updatePortfolioVisibility, 
+    resetOnboarding, 
+    githubAnalytics, 
+    connectGithub, 
+    disconnectGithub, 
+    updateUserSkills, 
+    updateProfessionalLinks: updateLinksStore 
+  } = useAppStore();
 
   // Access the global theme state & setTheme so the user can pick directly
   const { theme, setTheme } = useTheme();
@@ -194,7 +205,7 @@ export default function SettingsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>((user as any)?.imageUrl || null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const isUploading = false; // Mocking uploading state for compatibility
+  const isUploading = false; 
 
   const handleSaveAvatar = async () => {
     if (!previewUrl) return;
@@ -214,14 +225,12 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate MIME formats
     const allowedMimeTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedMimeTypes.includes(file.type)) {
       toast.error("Format unsupported. Use JPG, PNG or WEBP.");
       return;
     }
 
-    // Enforce 5MB limit
     if (file.size > 5 * 1024 * 1024) {
       toast.error("Image exceeds the 5MB limit.");
       return;
@@ -229,14 +238,12 @@ export default function SettingsPage() {
 
     setAvatarFile(file);
 
-    // Create client memory string preview
     const reader = new FileReader();
     reader.onloadend = () => {
       setPreviewUrl(reader.result as string);
     };
     reader.readAsDataURL(file);
   };
-  // ----------------------------------
 
   // Save profile information
   const handleSaveProfile = (e: React.FormEvent) => {
@@ -380,7 +387,6 @@ export default function SettingsPage() {
     }
   };
 
-  /** Theme option card definition */
   const themeOptions: { value: Theme; label: string; description: string; icon: React.ReactNode }[] = [
     {
       value: 'dark',
@@ -398,7 +404,6 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8 pb-12">
-      {/* Title Header */}
       <div>
         <h2
           className="text-2xl font-bold flex items-center space-x-2"
@@ -413,19 +418,13 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-        {/* Left Column: Form Settings (Appearance, Profile & Notification configs) */}
         <div className="lg:col-span-2 space-y-8">
-
-          {/* ─── PROFILE SETTINGS FORM ───────────────────────────────────── */}
           <Card hoverEffect={false}>
             <CardHeader>
               <CardTitle className="text-base font-bold">Profile Details</CardTitle>
               <CardDescription className="text-xs">Edit your public metadata and target career goals.</CardDescription>
             </CardHeader>
             <CardContent>
-
-              {/* DYNAMIC AVATAR UPLOAD COMPONENT */}
               <div className="p-4 bg-white/5 rounded-xl border border-white/5 flex flex-col sm:flex-row items-center gap-6 mb-6 text-xs sm:text-sm">
                 <div className="relative w-20 h-20 rounded-full border border-white/10 bg-white/5 flex items-center justify-center overflow-hidden shrink-0 group">
                   {previewUrl ? (
@@ -526,7 +525,6 @@ export default function SettingsPage() {
                   leftIcon={<UserIcon className="w-4.5 h-4.5" aria-hidden="true" />}
                 />
 
-                {/* ─── PUBLIC PORTFOLIO VISIBILITY SECTION ───────────────────────── */}
                 <div className="p-4 rounded-xl border border-indigo-500/20 bg-indigo-950/20 space-y-3 mt-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
@@ -537,7 +535,6 @@ export default function SettingsPage() {
                       </Badge>
                     </div>
 
-                    {/* Toggle Switch */}
                     <button
                       type="button"
                       role="switch"
@@ -642,7 +639,6 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          {/* ─── SKILLS PORTFOLIO & AI EXTRACTION ───────────────────────── */}
           <Card hoverEffect={false}>
             <CardHeader>
               <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -656,8 +652,6 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 pt-1">
-              
-              {/* Removable Skills Badges */}
               <div className="space-y-2">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   Active Technical Skills
@@ -686,7 +680,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Manual entry row */}
               <div className="flex items-center space-x-2">
                 <input
                   type="text"
@@ -711,7 +704,6 @@ export default function SettingsPage() {
                 </Button>
               </div>
 
-              {/* AI Resume Skill Extractor Container */}
               <div className="rounded-xl border border-indigo-500/20 bg-indigo-950/20 p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
@@ -758,7 +750,6 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Save Trigger */}
               <div className="flex items-center justify-between pt-4 border-t border-white/5">
                 {skillsSaveSuccess && (
                   <span className="text-xs text-emerald-400 font-semibold flex items-center">
@@ -783,11 +774,9 @@ export default function SettingsPage() {
                   )}
                 </Button>
               </div>
-
             </CardContent>
           </Card>
 
-          {/* ─── PROFESSIONAL LINKS ──────────────────────────────────────── */}
           <Card hoverEffect={false}>
             <CardHeader>
               <CardTitle>Professional Links</CardTitle>
@@ -808,3 +797,11 @@ export default function SettingsPage() {
                 label="Resume URL"
                 value={resumeUrl}
                 onChange={(e) => setResumeUrl(e.target.value)}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
