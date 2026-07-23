@@ -2,8 +2,22 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowUpRight, Check, Clock, FolderGit2, TrendingUp, Plus, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, 
+  ChevronDown, 
+  FolderGit2, 
+  Clock, 
+  Award, 
+  Sparkles, 
+  Cpu, 
+  ArrowUpRight, 
+  Check,
+  TrendingUp,
+  BrainCircuit,
+  Loader2,
+  Plus
+} from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -62,6 +76,11 @@ export default function RecommendedProjectsPage() {
   const [activeTab, setActiveTab] = useState<'All' | 'Beginner' | 'Intermediate' | 'Advanced'>('All');
   const [sortBy, setSortBy] = useState<'resumeValue' | 'duration'>('resumeValue');
 
+  // Pagination states
+  const [displayCount, setDisplayCount] = useState(6);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [view, setView] = useState<ProjectView>(DEFAULT_VIEW);
+
   // Trigger project selection & auto-generate roadmap if not already present
   const handleBuildProject = (projectId: string, title: string) => {
     selectProject(projectId);
@@ -86,6 +105,18 @@ export default function RecommendedProjectsPage() {
     // Simple mock comparison for duration sorting
     return b.duration.localeCompare(a.duration);
   });
+
+  const displayedProjects = filteredProjects.slice(0, displayCount);
+  const hasMore = displayCount < filteredProjects.length;
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+    // Simulate network delay for loading skeleton
+    setTimeout(() => {
+      setDisplayCount(prev => prev + 6);
+      setIsLoadingMore(false);
+    }, 600);
+  };
 
   return (
     <div className="space-y-8 pb-12">
@@ -190,8 +221,9 @@ export default function RecommendedProjectsPage() {
             }}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProjects.map((project) => {
+          <div className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {displayedProjects.map((project) => {
               const isSelected = selectedProjectId === project.id;
               const projectStatus = getProjectStatus(project);
               const progress = project.progress ?? 0;
@@ -348,6 +380,62 @@ export default function RecommendedProjectsPage() {
                 </motion.div>
               );
             })}
+            
+            {/* Skeleton Loading State */}
+            {isLoadingMore && Array.from({ length: 3 }).map((_, i) => (
+              <motion.div
+                key={`skeleton-${i}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="h-full"
+              >
+                <Card className="bg-[#08051e]/40 h-full flex flex-col justify-between relative border border-white/5 p-6 animate-pulse">
+                  <div className="space-y-4 w-full">
+                    <div className="flex items-center justify-between">
+                      <div className="h-6 w-20 bg-white/10 rounded-full"></div>
+                      <div className="h-4 w-16 bg-white/10 rounded"></div>
+                    </div>
+                    <div>
+                      <div className="h-6 w-3/4 bg-white/10 rounded mb-2"></div>
+                      <div className="h-3 w-1/4 bg-white/10 rounded"></div>
+                    </div>
+                    <div className="h-8 w-full bg-indigo-500/10 rounded-xl"></div>
+                    <div className="space-y-2">
+                      <div className="h-3 w-full bg-white/10 rounded"></div>
+                      <div className="h-3 w-5/6 bg-white/10 rounded"></div>
+                      <div className="h-3 w-4/6 bg-white/10 rounded"></div>
+                    </div>
+                    <div className="space-y-2 mt-4">
+                      <div className="h-2 w-20 bg-white/10 rounded"></div>
+                      <div className="flex gap-2">
+                        <div className="h-4 w-12 bg-white/10 rounded"></div>
+                        <div className="h-4 w-16 bg-white/10 rounded"></div>
+                        <div className="h-4 w-14 bg-white/10 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-6 border-t border-white/5 mt-6">
+                    <div className="h-11 w-full bg-white/10 rounded-xl"></div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+            </div>
+
+            {/* Load More Action */}
+            {hasMore && !isLoadingMore && (
+              <div className="flex justify-center pt-4 pb-8">
+                <Button 
+                  variant="outline" 
+                  onClick={handleLoadMore}
+                  className="w-full sm:w-auto px-8"
+                  leftIcon={<ChevronDown className="w-4 h-4" />}
+                >
+                  Load More Projects
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </AnimatePresence>
