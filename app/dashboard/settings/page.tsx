@@ -801,6 +801,200 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Right Column: Connection accounts & Operations configs */}
+        <div className="space-y-8">
+
+          {/* ─── CONNECTED ACCOUNTS ───────────────────────── */}
+          <Card hoverEffect={false}>
+            <CardHeader>
+              <CardTitle className="text-base font-bold">Connected Integrations</CardTitle>
+              <CardDescription className="text-xs">Connect credentials to sync active files.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-1">
+
+              {/* GitHub integration status */}
+              <div
+                className="p-4 rounded-xl border flex flex-col gap-4 text-xs sm:text-sm"
+                style={{ backgroundColor: 'var(--hover-bg)', borderColor: 'var(--border-subtle)' }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3.5">
+                    <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400">
+                      <Github className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>GitHub Crawlers</h4>
+                      <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                        {githubAnalytics.connected ? `Synced: @${githubAnalytics.username}` : 'Disconnected'}
+                      </p>
+                    </div>
+                  </div>
+                  {githubAnalytics.connected && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleToggleGithub}
+                      className="h-9 text-xs"
+                    >
+                      Disconnect
+                    </Button>
+                  )}
+                </div>
+
+                {!githubAnalytics.connected && (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Enter GitHub Username..."
+                      value={gitUsername}
+                      onChange={(e) => setGitUsername(e.target.value)}
+                      disabled={gitLoading}
+                      className="flex-1 bg-[#0a071a]/50 text-xs rounded-xl border border-white/10 px-3 py-2 focus:outline-none focus:border-indigo-500/55 text-slate-200"
+                    />
+                    <Button
+                      variant="glow"
+                      size="sm"
+                      onClick={handleToggleGithub}
+                      disabled={gitLoading || !gitUsername.trim()}
+                      className="h-9 text-xs px-4"
+                    >
+                      {gitLoading ? 'Connecting...' : 'Connect'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+
+              {/* LinkedIn integration status */}
+              <div
+                className="p-4 rounded-xl border flex items-center justify-between text-xs sm:text-sm"
+                style={{ backgroundColor: 'var(--hover-bg)', borderColor: 'var(--border-subtle)' }}
+              >
+                <div className="flex items-center space-x-3.5">
+                  <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-400">
+                    <Linkedin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold" style={{ color: 'var(--text-primary)' }}>LinkedIn Endorsements</h4>
+                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>Synced & parsed</p>
+                  </div>
+                </div>
+                <Badge variant="glow">Active</Badge>
+              </div>
+
+            </CardContent>
+          </Card>
+
+          {/* ─── DATA MANAGEMENT ───────────────────────── */}
+          <Card hoverEffect={false}>
+            <CardHeader>
+              <CardTitle className="text-base font-bold text-indigo-300">Data Management</CardTitle>
+              <CardDescription className="text-xs">Export or import your profile and projects data.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-1">
+              
+              <div className="p-3.5 bg-indigo-500/5 rounded-xl border border-indigo-500/10 flex flex-col space-y-3.5 text-xs text-slate-400">
+                <div>
+                  <h4 className="font-bold flex items-center text-slate-200">
+                    <Download className="w-4 h-4 mr-1 text-indigo-400" />
+                    Export Data
+                  </h4>
+                  <p className="text-[10px] leading-relaxed mt-1">
+                    Download a JSON file containing your profile, active projects, and roadmap milestones.
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportData}
+                    disabled={isExporting}
+                    className="h-9 text-[10px] border-indigo-500/30 hover:bg-indigo-500/10 hover:text-white"
+                  >
+                    {isExporting ? 'Exporting...' : 'Download JSON Data'}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="p-3.5 bg-indigo-500/5 rounded-xl border border-indigo-500/10 flex flex-col space-y-3.5 text-xs text-slate-400">
+                <div>
+                  <h4 className="font-bold flex items-center text-slate-200">
+                    <Upload className="w-4 h-4 mr-1 text-indigo-400" />
+                    Import Data
+                  </h4>
+                  <p className="text-[10px] leading-relaxed mt-1">
+                    Restore your profile and projects from a previously exported JSON file.
+                  </p>
+                </div>
+                <div className="flex items-center justify-between">
+                  <input
+                    type="file"
+                    accept=".json"
+                    ref={importFileRef}
+                    className="hidden"
+                    onChange={handleImportData}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => importFileRef.current?.click()}
+                    disabled={isImporting}
+                    className="h-9 text-[10px] border-indigo-500/30 hover:bg-indigo-500/10 hover:text-white"
+                  >
+                    {isImporting ? 'Importing...' : 'Upload JSON Data'}
+                  </Button>
+                </div>
+              </div>
+
+            </CardContent>
+          </Card>
+
+          {/* ─── DANGER ZONES: RESET & DELETE ACCOUNTS ───────────────────── */}
+          <Card hoverEffect={false} className="border-rose-500/20">
+            <CardHeader>
+              <CardTitle className="text-base font-bold text-rose-300">Danger Operations</CardTitle>
+              <CardDescription className="text-xs">Destructive changes that erase technical indices.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-1">
+
+              {/* Reset Onboarding pathway */}
+              <div className="p-3.5 bg-rose-500/5 rounded-xl border border-rose-500/10 flex flex-col space-y-3.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <div>
+                  <h4 className="font-bold flex items-center" style={{ color: 'var(--text-primary)' }}>
+                    <RefreshCw className="w-4 h-4 mr-1 text-rose-400" />
+                    Reset Onboarding Wizard
+                  </h4>
+                  <p className="text-[10px] leading-relaxed mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Erase your active profile metrics, resume attachments, and GitHub mappings to rerun the cinematic AI blueprint engine from start.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetOnboarding}
+                    className="h-9 text-[10px] border-rose-500/30 hover:bg-rose-500/10 hover:text-white"
+                  >
+                    Reset Onboarding State
+                  </Button>
+                </div>
+              </div>
+
+              {/* Delete Account */}
+              <Button
+                variant="outline"
+                className="w-full h-11 border-rose-500/20 hover:bg-rose-500/10 text-rose-400 hover:text-white text-xs font-semibold"
+                leftIcon={<Trash2 className="w-4 h-4 shrink-0" />}
+              >
+                Delete Account & Cockpit
+              </Button>
+
+            </CardContent>
+          </Card>
+
+        </div>
+
       </div>
     </div>
   );
