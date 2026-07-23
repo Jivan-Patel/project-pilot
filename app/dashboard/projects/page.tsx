@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -80,6 +80,7 @@ export default function RecommendedProjectsPage() {
   const [displayCount, setDisplayCount] = useState(6);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [view, setView] = useState<ProjectView>(DEFAULT_VIEW);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // Trigger project selection & auto-generate roadmap if not already present
   const handleBuildProject = (projectId: string, title: string) => {
@@ -109,14 +110,35 @@ export default function RecommendedProjectsPage() {
   const displayedProjects = filteredProjects.slice(0, displayCount);
   const hasMore = displayCount < filteredProjects.length;
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
+    if (isLoadingMore || !hasMore) return;
     setIsLoadingMore(true);
     // Simulate network delay for loading skeleton
     setTimeout(() => {
       setDisplayCount(prev => prev + 6);
       setIsLoadingMore(false);
-    }, 600);
-  };
+    }, 400);
+  }, [isLoadingMore, hasMore]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) observer.unobserve(currentTarget);
+    };
+  }, [handleLoadMore, hasMore, isLoadingMore]);
 
   return (
     <div className="space-y-8 pb-12">
@@ -423,17 +445,19 @@ export default function RecommendedProjectsPage() {
             ))}
             </div>
 
-            {/* Load More Action */}
-            {hasMore && !isLoadingMore && (
-              <div className="flex justify-center pt-4 pb-8">
-                <Button 
-                  variant="outline" 
-                  onClick={handleLoadMore}
-                  className="w-full sm:w-auto px-8"
-                  leftIcon={<ChevronDown className="w-4 h-4" />}
-                >
-                  Load More Projects
-                </Button>
+            {/* Infinite Scroll Target & Load More Action */}
+            {hasMore && (
+              <div ref={observerTarget} className="flex justify-center pt-4 pb-8 w-full min-h-[80px]">
+                {!isLoadingMore && (
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLoadMore}
+                    className="w-full sm:w-auto px-8"
+                    leftIcon={<ChevronDown className="w-4 h-4" />}
+                  >
+                    Load More Projects
+                  </Button>
+                )}
               </div>
             )}
           </div>
